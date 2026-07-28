@@ -134,39 +134,39 @@
             <nav class="mt-4 px-3 space-y-1 pb-4">
                 <button onclick="switchTab('dashboard')" id="btn-dashboard" class="sidebar-link active w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-white/10 transition">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-                    <span>1. Dashboard</span>
+                    <span>Dashboard</span>
                 </button>
                 <button onclick="switchTab('pedidos')" id="btn-pedidos" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-white/10 transition">
                     <i data-lucide="shopping-bag" class="w-5 h-5"></i>
-                    <span>2. Pedidos & Vendas</span>
+                    <span>Pedidos & Vendas</span>
                 </button>
                 <button onclick="switchTab('produtos')" id="btn-produtos" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-white/10 transition">
                     <i data-lucide="package" class="w-5 h-5"></i>
-                    <span>3. Produtos / Catálogo</span>
+                    <span>Produtos / Catálogo</span>
                 </button>
                 <button onclick="switchTab('estoque')" id="btn-estoque" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-white/10 transition">
                     <i data-lucide="boxes" class="w-5 h-5"></i>
-                    <span>4. Controle Estoque</span>
+                    <span>Controle Estoque</span>
                 </button>
                 <button onclick="switchTab('clientes')" id="btn-clientes" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-white/10 transition">
                     <i data-lucide="users" class="w-5 h-5"></i>
-                    <span>5. Clientes (CRM)</span>
+                    <span>Clientes (CRM)</span>
                 </button>
                 <button onclick="switchTab('financeiro')" id="btn-financeiro" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-white/10 transition">
                     <i data-lucide="wallet" class="w-5 h-5"></i>
-                    <span>6. Financeiro</span>
+                    <span>Financeiro</span>
                 </button>
                 <button onclick="switchTab('custos')" id="btn-custos" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-white/10 transition">
                     <i data-lucide="calculator" class="w-5 h-5"></i>
-                    <span>7. Eng. Custos & Preços</span>
+                    <span>Eng. Custos & Preços</span>
                 </button>
                 <button onclick="switchTab('metas')" id="btn-metas" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-white/10 transition">
                     <i data-lucide="target" class="w-5 h-5"></i>
-                    <span>8. Metas Mensais</span>
+                    <span>Metas Mensais</span>
                 </button>
                 <button onclick="switchTab('relatorios')" id="btn-relatorios" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-white/10 transition">
                     <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-                    <span>9. Relatórios</span>
+                    <span>Relatórios</span>
                 </button>
             </nav>
         </div>
@@ -177,10 +177,10 @@
                 <i data-lucide="plus-circle" class="w-4 h-4"></i>
                 <span>Novo Pedido</span>
             </button>
-            <button onclick="resetData()" class="w-full bg-white/10 hover:bg-white/20 active:scale-[0.98] text-slate-300 py-2 rounded-lg text-xs font-medium flex items-center justify-center space-x-1 transition">
+            <!-- <button onclick="resetData()" class="w-full bg-white/10 hover:bg-white/20 active:scale-[0.98] text-slate-300 py-2 rounded-lg text-xs font-medium flex items-center justify-center space-x-1 transition">
                 <i data-lucide="refresh-cw" class="w-3 h-3"></i>
                 <span>Resetar Dados Demonstração</span>
-            </button>
+            </button> -->
         </div>
     </aside>
 
@@ -194,7 +194,7 @@
                     <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
                 <div class="min-w-0">
-                    <h2 id="page-title" class="text-base md:text-xl font-bold text-slate-800 truncate">1. Dashboard Geral</h2>
+                    <h2 id="page-title" class="text-base md:text-xl font-bold text-slate-800 truncate">Dashboard Geral</h2>
                     <p class="hidden sm:block text-xs text-slate-500">Visão em tempo real do seu negócio de streetwear</p>
                 </div>
             </div>
@@ -556,6 +556,7 @@
                         <select id="prod-categoria" onchange="atualizarSkuPreview()" class="w-full border rounded p-2 mt-1">
                             <option>Camiseta</option>
                             <option>Ecobag</option>
+                            <option>Oversized Marron</option>
                         </select>
                     </div>
                 </div>
@@ -704,21 +705,21 @@
             }
         }
 
-        async function resetData() {
-            if (!confirm('Isso vai apagar TODOS os dados do banco (produtos, pedidos, clientes) e recriar os dados de demonstração. Essa ação não pode ser desfeita. Continuar?')) return;
-            try {
-                await db.from('pedidos').delete().gte('id', 0);
-                await db.from('clientes').delete().gte('id', 0);
-                await db.from('produtos').delete().gte('id', 0);
-                const { error } = await db.from('produtos').insert(defaultProdutos);
-                if (error) throw error;
-                toast('Dados resetados para a demonstração', 'info');
-                await loadAllData();
-            } catch (err) {
-                console.error(err);
-                toast('Erro ao resetar os dados: ' + err.message, 'error');
-            }
-        }
+        // async function resetData() {
+        //     if (!confirm('Isso vai apagar TODOS os dados do banco (produtos, pedidos, clientes) e recriar os dados de demonstração. Essa ação não pode ser desfeita. Continuar?')) return;
+        //     try {
+        //         await db.from('pedidos').delete().gte('id', 0);
+        //         await db.from('clientes').delete().gte('id', 0);
+        //         await db.from('produtos').delete().gte('id', 0);
+        //         const { error } = await db.from('produtos').insert(defaultProdutos);
+        //         if (error) throw error;
+        //         toast('Dados resetados para a demonstração', 'info');
+        //         await loadAllData();
+        //     } catch (err) {
+        //         console.error(err);
+        //         toast('Erro ao resetar os dados: ' + err.message, 'error');
+        //     }
+        // }
 
         // TOAST NOTIFICATIONS
         function toast(message, type) {
@@ -755,15 +756,15 @@
             document.getElementById('btn-' + tabName).classList.add('active');
 
             const titles = {
-                dashboard: '1. Dashboard Geral',
-                pedidos: '2. Pedidos & Vendas',
-                produtos: '3. Catálogo de Produtos',
-                estoque: '4. Controle de Estoque',
-                clientes: '5. Gestão de Clientes (CRM)',
-                financeiro: '6. Fluxo de Caixa',
-                custos: '7. Engenharia de Custos',
-                metas: '8. Metas Mensais',
-                relatorios: '9. Relatórios de Desempenho'
+                dashboard: 'Dashboard Geral',
+                pedidos: 'Pedidos & Vendas',
+                produtos: 'Catálogo de Produtos',
+                estoque: 'Controle de Estoque',
+                clientes: 'Gestão de Clientes (CRM)',
+                financeiro: 'Fluxo de Caixa',
+                custos: 'Engenharia de Custos',
+                metas: 'Metas Mensais',
+                relatorios: 'Relatórios de Desempenho'
             };
             document.getElementById('page-title').innerText = titles[tabName];
 
