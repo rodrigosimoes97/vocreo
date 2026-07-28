@@ -1,100 +1,1310 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#1F3A5F">
-<title>Streetwear ERP PWA</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-body{font-family:Inter,system-ui,sans-serif}
-.card{background:#fff;border-radius:1rem;padding:1rem;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.dark body{background:#0f172a;color:#e2e8f0}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streetwear ERP | Gestão de Camisetas Oversized & Ecobags</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: { 700: '#26426b', 800: '#1F3A5F', 900: '#112239' },
+                        brand: { blue: '#4F8EF7', green: '#22C55E', red: '#EF4444', yellow: '#FBBF24', purple: '#A855F7', bg: '#F3F5F7' }
+                    },
+                    fontSize: { '2xs': '0.65rem' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #F3F5F7; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        .sidebar-link.active { background-color: #4F8EF7; color: white; font-weight: 600; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn .2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .modal-overlay { backdrop-filter: blur(2px); }
+        .btn-icon { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; transition: background .15s; }
+        .btn-icon:hover { background: #e2e8f0; }
+        input:focus, select:focus, textarea:focus { outline: 2px solid #4F8EF7; outline-offset: 1px; }
+        .toast { animation: slideIn .25s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        table th { position: sticky; top: 0; }
+    </style>
 </head>
-<body class="bg-slate-100 text-slate-800">
-<div class="min-h-screen flex">
-<aside class="w-64 bg-slate-900 text-white p-4 hidden md:block">
-<h1 class="text-xl font-bold">Streetwear ERP</h1>
-<p class="text-xs text-slate-400">Oversized & Ecobags</p>
-<nav class="mt-6 space-y-2 text-sm">
-<button class="w-full text-left px-3 py-2 rounded-lg bg-blue-600">Dashboard</button>
-<button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800">Produtos</button>
-<button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800">Pedidos</button>
-<button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800">Produção</button>
-<button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800">Estoque</button>
-</nav>
-</aside>
-<main class="flex-1 p-6 space-y-6">
-<div class="flex items-center justify-between">
-<div>
-<h2 class="text-2xl font-bold">Dashboard</h2>
-<p class="text-sm text-slate-500">Controle interno da loja</p>
-</div>
-<button id="themeBtn" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm">Alternar tema</button>
-</div>
+<body class="h-screen flex overflow-hidden text-slate-800">
 
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-<div class="card"><p class="text-xs uppercase text-slate-400">Receita</p><h3 class="text-2xl font-bold">R$ 8.940</h3></div>
-<div class="card"><p class="text-xs uppercase text-slate-400">Lucro</p><h3 class="text-2xl font-bold text-emerald-600">R$ 3.580</h3></div>
-<div class="card"><p class="text-xs uppercase text-slate-400">Pedidos</p><h3 class="text-2xl font-bold">83</h3></div>
-<div class="card"><p class="text-xs uppercase text-slate-400">Estoque crítico</p><h3 class="text-2xl font-bold text-red-500">3 itens</h3></div>
-</div>
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="w-64 bg-navy-800 text-white flex flex-col justify-between flex-shrink-0 shadow-xl">
+        <div class="overflow-y-auto">
+            <!-- LOGO BRAND -->
+            <div class="p-5 border-b border-navy-900 flex items-center space-x-3">
+                <div class="p-2 bg-brand-blue rounded-lg text-white">
+                    <i data-lucide="shirt" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">STREETWEAR ERP</h1>
+                    <p class="text-xs text-slate-400">Oversized & Ecobags</p>
+                </div>
+            </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-<div class="card"><h4 class="font-semibold mb-3">Vendas por categoria</h4><canvas id="chartCategoria" height="220"></canvas></div>
-<div class="card"><h4 class="font-semibold mb-3">Produção da semana</h4><canvas id="chartProducao" height="220"></canvas></div>
-</div>
+            <!-- NAVIGATION LINKS -->
+            <nav class="mt-4 px-3 space-y-1">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="sidebar-link active w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="switchTab('pedidos')" id="btn-pedidos" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">
+                    <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                    <span>Pedidos & Vendas</span>
+                </button>
+                <button onclick="switchTab('produtos')" id="btn-produtos" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">
+                    <i data-lucide="package" class="w-5 h-5"></i>
+                    <span>Produtos / Catálogo</span>
+                </button>
+                <button onclick="switchTab('estoque')" id="btn-estoque" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">
+                    <i data-lucide="boxes" class="w-5 h-5"></i>
+                    <span>Controle Estoque</span>
+                </button>
+                <button onclick="switchTab('clientes')" id="btn-clientes" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span>Clientes (CRM)</span>
+                </button>
+                <button onclick="switchTab('financeiro')" id="btn-financeiro" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">
+                    <i data-lucide="wallet" class="w-5 h-5"></i>
+                    <span>Financeiro</span>
+                </button>
+                <button onclick="switchTab('custos')" id="btn-custos" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">
+                    <i data-lucide="calculator" class="w-5 h-5"></i>
+                    <span>Eng. Custos & Preços</span>
+                </button>
+                <button onclick="switchTab('metas')" id="btn-metas" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">
+                    <i data-lucide="target" class="w-5 h-5"></i>
+                    <span>Metas Mensais</span>
+                </button>
+                <button onclick="switchTab('relatorios')" id="btn-relatorios" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span>Relatórios</span>
+                </button>
+            </nav>
+        </div>
 
-<div class="card space-y-4">
-<div class="flex items-center justify-between">
-<div>
-<h4 class="font-semibold">Upload de fotos dos produtos</h4>
-<p class="text-xs text-slate-500">Selecione imagens para enviar ao Supabase Storage.</p>
-</div>
-<button class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm">Sincronizar</button>
-</div>
-<div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center">
-<input type="file" id="fotoProduto" multiple accept="image/*" class="mx-auto block text-sm">
-<p class="mt-3 text-xs text-slate-500">Use o bucket <strong>product-images</strong> do Supabase.</p>
-</div>
-</div>
+        <!-- QUICK ACTION BUTTONS -->
+        <div class="p-4 border-t border-navy-900 space-y-2 flex-shrink-0">
+            <button onclick="abrirModalPedido()" class="w-full bg-brand-green hover:bg-emerald-600 text-white py-2 rounded-lg text-sm font-semibold flex items-center justify-center space-x-2 shadow transition">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>Novo Pedido</span>
+            </button>
+            <button onclick="abrirModalProduto()" class="w-full bg-brand-blue hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold flex items-center justify-center space-x-2 shadow transition">
+                <i data-lucide="package-plus" class="w-4 h-4"></i>
+                <span>Novo Produto</span>
+            </button>
+            <button onclick="abrirModalCliente()" class="w-full bg-slate-100 hover:bg-white text-navy-800 py-2 rounded-lg text-sm font-semibold flex items-center justify-center space-x-2 shadow transition">
+                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                <span>Novo Cliente</span>
+            </button>
+            <button onclick="confirmarAcao('Isso vai apagar todos os dados salvos e restaurar os dados de demonstração. Deseja continuar?', resetData)" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 py-2 rounded-lg text-xs font-medium flex items-center justify-center space-x-1 transition">
+                <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                <span>Resetar Dados Demonstração</span>
+            </button>
+        </div>
+    </aside>
 
-<div class="card">
-<div class="flex items-center justify-between mb-4">
-<h4 class="font-semibold">Controle de produção</h4>
-<button class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm">Novo estágio</button>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
-<div class="rounded-xl border border-slate-200 p-4"><p class="font-semibold text-slate-700">Impressão</p><p class="text-2xl font-bold mt-2">4</p></div>
-<div class="rounded-xl border border-slate-200 p-4"><p class="font-semibold text-slate-700">Prensagem</p><p class="text-2xl font-bold mt-2">7</p></div>
-<div class="rounded-xl border border-slate-200 p-4"><p class="font-semibold text-slate-700">Embalagem</p><p class="text-2xl font-bold mt-2">3</p></div>
-<div class="rounded-xl border border-slate-200 p-4"><p class="font-semibold text-slate-700">Expedição</p><p class="text-2xl font-bold mt-2">2</p></div>
-</div>
-</div>
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 flex flex-col overflow-hidden">
 
-<div class="card">
-<h4 class="font-semibold mb-3">Produtos recentes</h4>
-<div class="overflow-x-auto">
-<table class="w-full text-sm">
-<thead><tr class="text-left text-slate-500"><th class="pb-2">Produto</th><th class="pb-2">Categoria</th><th class="pb-2">Estoque</th><th class="pb-2">Preço</th></tr></thead>
-<tbody class="divide-y divide-slate-100">
-<tr><td class="py-3 font-medium">Oversized Cyberpunk</td><td>Camiseta</td><td>25</td><td>R$ 89,90</td></tr>
-<tr><td class="py-3 font-medium">Ecobag Minimal Black</td><td>Ecobag</td><td>30</td><td>R$ 49,90</td></tr>
-<tr><td class="py-3 font-medium">Oversized Vintage</td><td>Camiseta</td><td>18</td><td>R$ 99,90</td></tr>
-</tbody>
-</table>
-</div>
-</div>
-</main>
-</div>
+        <!-- HEADER BAR -->
+        <header class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center shadow-sm flex-shrink-0">
+            <div>
+                <h2 id="page-title" class="text-xl font-bold text-slate-800">Dashboard Geral</h2>
+                <p class="text-xs text-slate-500">Visão em tempo real do seu negócio de streetwear</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="bg-slate-100 px-3 py-1.5 rounded-full flex items-center space-x-2 text-xs font-semibold text-slate-600 border border-slate-200">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Dados salvos neste navegador</span>
+                </div>
+                <div class="flex items-center space-x-2 text-sm text-slate-700 font-medium">
+                    <div class="w-8 h-8 rounded-full bg-navy-800 text-white flex items-center justify-center font-bold">SW</div>
+                    <span>Marca Urban Street</span>
+                </div>
+            </div>
+        </header>
 
-<script>
-new Chart(document.getElementById('chartCategoria'),{type:'doughnut',data:{labels:['Camisetas','Ecobags'],datasets:[{data:[7200,1740],backgroundColor:['#2563eb','#22c55e']}]},options:{plugins:{legend:{position:'bottom'}}}});
-new Chart(document.getElementById('chartProducao'),{type:'bar',data:{labels:['Seg','Ter','Qua','Qui','Sex','Sáb'],datasets:[{label:'Peças produzidas',data:[12,18,15,22,19,9],backgroundColor:'#2563eb',borderRadius:8}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
-document.getElementById('themeBtn').addEventListener('click',()=>{document.documentElement.classList.toggle('dark');document.body.classList.toggle('bg-slate-900');document.body.classList.toggle('text-slate-100');});
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}
-</script>
+        <!-- CONTENT CONTAINERS -->
+        <div class="flex-1 overflow-y-auto p-8">
+
+            <!-- TAB 1: DASHBOARD -->
+            <div id="tab-dashboard" class="tab-content active space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-brand-blue">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Receita Total</p>
+                        <h3 id="kpi-receita" class="text-2xl font-bold text-navy-800 mt-1">R$ 0,00</h3>
+                        <p class="text-xs text-emerald-600 font-medium mt-1"><i data-lucide="trending-up" class="inline w-3 h-3"></i> Pedidos não cancelados</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-brand-green">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Lucro Líquido</p>
+                        <h3 id="kpi-lucro" class="text-2xl font-bold text-emerald-600 mt-1">R$ 0,00</h3>
+                        <p id="kpi-margem-lucro" class="text-xs text-slate-500 mt-1">Margem Líq: 0%</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-brand-red">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Despesas</p>
+                        <h3 id="kpi-despesas" class="text-2xl font-bold text-red-500 mt-1">R$ 0,00</h3>
+                        <p class="text-xs text-slate-500 mt-1">Lançamentos manuais</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-purple-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total de Pedidos</p>
+                        <h3 id="kpi-pedidos" class="text-2xl font-bold text-navy-800 mt-1">0</h3>
+                        <p id="kpi-ticket" class="text-xs text-slate-500 mt-1">Ticket Médio: R$ 0,00</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-brand-yellow">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Estoque Total</p>
+                        <h3 id="kpi-estoque" class="text-2xl font-bold text-navy-800 mt-1">0 un</h3>
+                        <p id="kpi-critico" class="text-xs text-red-500 font-semibold mt-1">0 itens críticos</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center space-x-2">
+                            <i data-lucide="pie-chart" class="w-5 h-5 text-brand-blue"></i>
+                            <span>Vendas por Categoria (R$)</span>
+                        </h4>
+                        <div class="h-64 flex justify-center"><canvas id="chartCategoria"></canvas></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center space-x-2">
+                            <i data-lucide="bar-chart-2" class="w-5 h-5 text-brand-green"></i>
+                            <span>Volume Vendido por Produto (Unidades)</span>
+                        </h4>
+                        <div class="h-64"><canvas id="chartProdutos"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center space-x-2">
+                            <i data-lucide="clock" class="w-5 h-5 text-slate-500"></i>
+                            <span>Últimos Pedidos</span>
+                        </h4>
+                        <div id="dash-ultimos-pedidos" class="text-xs divide-y divide-slate-100"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center space-x-2">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-red-500"></i>
+                            <span>Estoque Crítico</span>
+                        </h4>
+                        <div id="dash-estoque-critico" class="text-xs divide-y divide-slate-100"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: PEDIDOS -->
+            <div id="tab-pedidos" class="tab-content space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-3">
+                    <h3 class="text-lg font-bold text-slate-800">Lista de Pedidos Registrados</h3>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportarCSV('pedidos')" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-600 px-3 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i><span>Exportar CSV</span>
+                        </button>
+                        <button onclick="abrirModalPedido()" class="bg-brand-blue hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 shadow">
+                            <i data-lucide="plus" class="w-4 h-4"></i><span>Cadastrar Novo Pedido</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <input id="busca-pedido" oninput="renderPedidos()" type="text" placeholder="Buscar por cliente ou produto..." class="border border-slate-300 rounded-lg px-3 py-2 text-xs w-64">
+                    <select id="filtro-status-pedido" onchange="renderPedidos()" class="border border-slate-300 rounded-lg px-3 py-2 text-xs">
+                        <option value="">Todos os status</option>
+                        <option>Aguardando</option><option>Produção</option><option>Pronto</option><option>Enviado</option><option>Entregue</option><option>Cancelado</option>
+                    </select>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <thead class="bg-navy-800 text-white uppercase text-2xs">
+                            <tr>
+                                <th class="p-3"># Pedido</th><th class="p-3">Data</th><th class="p-3">Cliente</th><th class="p-3">Produto</th>
+                                <th class="p-3">Categoria</th><th class="p-3">Tam.</th><th class="p-3">Qtd</th><th class="p-3">Total (R$)</th>
+                                <th class="p-3">Lucro Líq.</th><th class="p-3">Status</th><th class="p-3 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-pedidos-body" class="divide-y divide-slate-100 font-medium"></tbody>
+                    </table>
+                    <p id="pedidos-empty" class="hidden text-center text-slate-400 text-xs py-8">Nenhum pedido encontrado.</p>
+                </div>
+            </div>
+
+            <!-- TAB 3: PRODUTOS -->
+            <div id="tab-produtos" class="tab-content space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-3">
+                    <h3 class="text-lg font-bold text-slate-800">Catálogo de Produtos</h3>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportarCSV('produtos')" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-600 px-3 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i><span>Exportar CSV</span>
+                        </button>
+                        <button onclick="abrirModalProduto()" class="bg-brand-blue hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 shadow">
+                            <i data-lucide="plus" class="w-4 h-4"></i><span>Cadastrar Produto</span>
+                        </button>
+                    </div>
+                </div>
+                <input id="busca-produto" oninput="renderProdutos()" type="text" placeholder="Buscar por nome, SKU ou categoria..." class="border border-slate-300 rounded-lg px-3 py-2 text-xs w-72">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <thead class="bg-navy-800 text-white uppercase text-2xs">
+                            <tr>
+                                <th class="p-3">SKU</th><th class="p-3">Nome do Produto</th><th class="p-3">Categoria</th><th class="p-3">Modelo</th>
+                                <th class="p-3">Custo (R$)</th><th class="p-3">Preço (R$)</th><th class="p-3">Margem Bruta</th><th class="p-3">Estoque</th>
+                                <th class="p-3">Status</th><th class="p-3 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-produtos-body" class="divide-y divide-slate-100 font-medium"></tbody>
+                    </table>
+                    <p id="produtos-empty" class="hidden text-center text-slate-400 text-xs py-8">Nenhum produto encontrado.</p>
+                </div>
+            </div>
+
+            <!-- TAB 4: ESTOQUE -->
+            <div id="tab-estoque" class="tab-content space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-3">
+                    <h3 class="text-lg font-bold text-slate-800">Controle de Estoque & Insumos</h3>
+                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                        <input type="checkbox" id="filtro-estoque-critico" onchange="renderEstoque()" class="rounded">
+                        Mostrar apenas itens críticos
+                    </label>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <thead class="bg-navy-800 text-white uppercase text-2xs">
+                            <tr>
+                                <th class="p-3">SKU</th><th class="p-3">Produto</th><th class="p-3">Categoria</th><th class="p-3">Vendidos (total)</th>
+                                <th class="p-3">Saldo Atual</th><th class="p-3">Estoque Mínimo</th><th class="p-3">Status</th><th class="p-3">Sugestão Reposição</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-estoque-body" class="divide-y divide-slate-100 font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 5: CLIENTES -->
+            <div id="tab-clientes" class="tab-content space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-3">
+                    <h3 class="text-lg font-bold text-slate-800">Base de Clientes & CRM</h3>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportarCSV('clientes')" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-600 px-3 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i><span>Exportar CSV</span>
+                        </button>
+                        <button onclick="abrirModalCliente()" class="bg-brand-blue hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 shadow">
+                            <i data-lucide="plus" class="w-4 h-4"></i><span>Cadastrar Cliente</span>
+                        </button>
+                    </div>
+                </div>
+                <input id="busca-cliente" oninput="renderClientes()" type="text" placeholder="Buscar por nome ou cidade..." class="border border-slate-300 rounded-lg px-3 py-2 text-xs w-72">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <thead class="bg-navy-800 text-white uppercase text-2xs">
+                            <tr>
+                                <th class="p-3">Cliente</th><th class="p-3">Telefone</th><th class="p-3">Instagram</th><th class="p-3">Cidade</th>
+                                <th class="p-3">Qtd Pedidos</th><th class="p-3">Total Gasto</th><th class="p-3">Ticket Médio</th><th class="p-3">Status</th><th class="p-3 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-clientes-body" class="divide-y divide-slate-100 font-medium"></tbody>
+                    </table>
+                    <p id="clientes-empty" class="hidden text-center text-slate-400 text-xs py-8">Nenhum cliente encontrado.</p>
+                </div>
+            </div>
+
+            <!-- TAB 6: FINANCEIRO -->
+            <div id="tab-financeiro" class="tab-content space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-3">
+                    <h3 class="text-lg font-bold text-slate-800">Fluxo de Caixa</h3>
+                    <button onclick="abrirModalDespesa()" class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 shadow">
+                        <i data-lucide="minus-circle" class="w-4 h-4"></i><span>Lançar Despesa</span>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <p class="text-xs font-bold text-slate-400 uppercase">Receitas (Pedidos)</p>
+                        <h3 id="fin-receitas" class="text-xl font-bold text-emerald-600 mt-1">R$ 0,00</h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <p class="text-xs font-bold text-slate-400 uppercase">Despesas</p>
+                        <h3 id="fin-despesas" class="text-xl font-bold text-red-500 mt-1">R$ 0,00</h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <p class="text-xs font-bold text-slate-400 uppercase">Saldo</p>
+                        <h3 id="fin-saldo" class="text-xl font-bold text-navy-800 mt-1">R$ 0,00</h3>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <thead class="bg-navy-800 text-white uppercase text-2xs">
+                            <tr>
+                                <th class="p-3">Data</th><th class="p-3">Tipo</th><th class="p-3">Categoria</th><th class="p-3">Descrição</th>
+                                <th class="p-3">Valor (R$)</th><th class="p-3">Forma Pagamento</th><th class="p-3 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-financeiro-body" class="divide-y divide-slate-100 font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 7: CUSTOS -->
+            <div id="tab-custos" class="tab-content space-y-4">
+                <h3 class="text-lg font-bold text-slate-800">Formação de Preço e Custos Diretos</h3>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <p class="text-xs text-slate-500">Calculadora automática de Markup, Preço Ideal e Lucro estimado.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <div><label class="block text-xs font-semibold text-slate-600">Custo Malha/Tecido (R$)</label>
+                            <input id="calc-malha" type="number" step="0.01" value="22.00" oninput="calcularPreco()" class="mt-1 w-full border border-slate-300 rounded p-2 text-sm"></div>
+                        <div><label class="block text-xs font-semibold text-slate-600">Custo Estampa DTF (R$)</label>
+                            <input id="calc-dtf" type="number" step="0.01" value="8.50" oninput="calcularPreco()" class="mt-1 w-full border border-slate-300 rounded p-2 text-sm"></div>
+                        <div><label class="block text-xs font-semibold text-slate-600">Etiqueta + Embalagem (R$)</label>
+                            <input id="calc-etiq" type="number" step="0.01" value="2.50" oninput="calcularPreco()" class="mt-1 w-full border border-slate-300 rounded p-2 text-sm"></div>
+                        <div><label class="block text-xs font-semibold text-slate-600">Mão de Obra / Costura (R$)</label>
+                            <input id="calc-mao" type="number" step="0.01" value="5.00" oninput="calcularPreco()" class="mt-1 w-full border border-slate-300 rounded p-2 text-sm"></div>
+                    </div>
+                    <div class="p-4 bg-navy-800 text-white rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div><p class="text-xs text-slate-300">Custo Direto Total</p><p id="res-custo-total" class="text-xl font-bold">R$ 38,00</p></div>
+                        <div><p class="text-xs text-slate-300">Preço Sugerido (Markup 135%)</p><p id="res-preco-sugerido" class="text-xl font-bold text-brand-blue">R$ 89,30</p></div>
+                        <div><p class="text-xs text-slate-300">Lucro Líquido Estimado</p><p id="res-lucro-est" class="text-xl font-bold text-emerald-400">R$ 37,00</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 8: METAS -->
+            <div id="tab-metas" class="tab-content space-y-4">
+                <h3 class="text-lg font-bold text-slate-800">Acompanhamento de Metas Mensais</h3>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex items-end gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600">Meta de Receita do Mês (R$)</label>
+                            <input id="meta-input" type="number" step="10" class="mt-1 border border-slate-300 rounded p-2 text-sm w-48">
+                        </div>
+                        <button onclick="salvarMeta()" class="bg-navy-800 hover:bg-navy-900 text-white px-4 py-2 rounded-lg text-sm font-semibold">Salvar Meta</button>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm font-semibold mb-1">
+                            <span>Meta de Receita</span>
+                            <span id="meta-perc-text">0% Atingido</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+                            <div id="meta-bar" class="bg-brand-green h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-slate-500 mt-2">
+                            <span>Realizado: <b id="meta-realizado">R$ 0,00</b></span>
+                            <span>Meta: <b id="meta-alvo-label">R$ 0,00</b></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 9: RELATORIOS -->
+            <div id="tab-relatorios" class="tab-content space-y-4">
+                <h3 class="text-lg font-bold text-slate-800">Relatórios de Desempenho Executivo</h3>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h4 class="font-bold text-slate-700">Resumo por Categoria</h4>
+                    <div id="relatorio-categoria-container"></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h4 class="font-bold text-slate-700">Top 5 Clientes</h4>
+                    <div id="relatorio-clientes-container"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODAL PEDIDO -->
+    <div id="modal-pedido" class="fixed inset-0 bg-black/50 modal-overlay hidden items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-lg rounded-xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="modal-pedido-titulo" class="font-bold text-slate-800">Cadastrar Novo Pedido</h3>
+                <button onclick="fecharModal('modal-pedido')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-pedido" onsubmit="salvarPedido(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="ped-id">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700">Cliente</label>
+                        <select id="ped-cliente" required class="w-full border rounded p-2 mt-1"></select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700">Data</label>
+                        <input type="date" id="ped-data" required class="w-full border rounded p-2 mt-1">
+                    </div>
+                </div>
+                <p class="text-2xs text-slate-400">Cliente não cadastrado ainda? <button type="button" onclick="abrirModalCliente()" class="text-brand-blue font-semibold underline">Cadastrar novo cliente</button></p>
+                <div>
+                    <label class="block font-semibold text-slate-700">Produto</label>
+                    <select id="ped-produto" required class="w-full border rounded p-2 mt-1" onchange="atualizarResumoPedido()"></select>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700">Tamanho</label>
+                        <select id="ped-tamanho" class="w-full border rounded p-2 mt-1">
+                            <option>PP</option><option>P</option><option selected>M</option><option>G</option><option>GG</option><option>Único</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700">Quantidade</label>
+                        <input type="number" id="ped-qtd" value="1" min="1" required oninput="atualizarResumoPedido()" class="w-full border rounded p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700">Status</label>
+                        <select id="ped-status" class="w-full border rounded p-2 mt-1" onchange="atualizarResumoPedido()">
+                            <option>Aguardando</option><option>Produção</option><option>Pronto</option><option>Enviado</option>
+                            <option selected>Entregue</option><option>Cancelado</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="ped-resumo" class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-2xs text-slate-600"></div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="fecharModal('modal-pedido')" class="px-4 py-2 bg-slate-200 rounded text-slate-700 font-semibold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-brand-green hover:bg-emerald-600 text-white rounded font-semibold">Salvar Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL PRODUTO -->
+    <div id="modal-produto" class="fixed inset-0 bg-black/50 modal-overlay hidden items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-lg rounded-xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="modal-produto-titulo" class="font-bold text-slate-800">Cadastrar Produto</h3>
+                <button onclick="fecharModal('modal-produto')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-produto" onsubmit="salvarProduto(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="prod-id">
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block font-semibold text-slate-700">SKU</label><input type="text" id="prod-sku" required class="w-full border rounded p-2 mt-1"></div>
+                    <div><label class="block font-semibold text-slate-700">Categoria</label>
+                        <input type="text" id="prod-categoria" list="lista-categorias" required class="w-full border rounded p-2 mt-1">
+                        <datalist id="lista-categorias"><option>Camiseta</option><option>Ecobag</option><option>Moletom</option><option>Boné</option><option>Acessório</option></datalist>
+                    </div>
+                </div>
+                <div><label class="block font-semibold text-slate-700">Nome do Produto</label><input type="text" id="prod-nome" required class="w-full border rounded p-2 mt-1"></div>
+                <div><label class="block font-semibold text-slate-700">Modelo</label><input type="text" id="prod-modelo" class="w-full border rounded p-2 mt-1"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block font-semibold text-slate-700">Custo Unitário (R$)</label><input type="number" step="0.01" min="0" id="prod-custo" required class="w-full border rounded p-2 mt-1"></div>
+                    <div><label class="block font-semibold text-slate-700">Preço de Venda (R$)</label><input type="number" step="0.01" min="0" id="prod-preco" required class="w-full border rounded p-2 mt-1"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block font-semibold text-slate-700">Estoque Atual</label><input type="number" min="0" id="prod-estoque" required class="w-full border rounded p-2 mt-1"></div>
+                    <div><label class="block font-semibold text-slate-700">Estoque Mínimo</label><input type="number" min="0" id="prod-min" required class="w-full border rounded p-2 mt-1"></div>
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="fecharModal('modal-produto')" class="px-4 py-2 bg-slate-200 rounded text-slate-700 font-semibold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-brand-blue hover:bg-blue-600 text-white rounded font-semibold">Salvar Produto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL CLIENTE -->
+    <div id="modal-cliente" class="fixed inset-0 bg-black/50 modal-overlay hidden items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-lg rounded-xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="modal-cliente-titulo" class="font-bold text-slate-800">Cadastrar Cliente</h3>
+                <button onclick="fecharModal('modal-cliente')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-cliente" onsubmit="salvarCliente(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="cli-id">
+                <div><label class="block font-semibold text-slate-700">Nome do Cliente</label><input type="text" id="cli-nome" required class="w-full border rounded p-2 mt-1"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block font-semibold text-slate-700">Telefone</label><input type="text" id="cli-telefone" placeholder="(11) 99999-9999" class="w-full border rounded p-2 mt-1"></div>
+                    <div><label class="block font-semibold text-slate-700">Instagram</label><input type="text" id="cli-instagram" placeholder="@usuario" class="w-full border rounded p-2 mt-1"></div>
+                </div>
+                <div><label class="block font-semibold text-slate-700">Cidade</label><input type="text" id="cli-cidade" placeholder="São Paulo" class="w-full border rounded p-2 mt-1"></div>
+                <div><label class="block font-semibold text-slate-700">Observações</label><textarea id="cli-obs" rows="2" class="w-full border rounded p-2 mt-1"></textarea></div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="fecharModal('modal-cliente')" class="px-4 py-2 bg-slate-200 rounded text-slate-700 font-semibold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-brand-blue hover:bg-blue-600 text-white rounded font-semibold">Salvar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DESPESA -->
+    <div id="modal-despesa" class="fixed inset-0 bg-black/50 modal-overlay hidden items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="modal-despesa-titulo" class="font-bold text-slate-800">Lançar Despesa</h3>
+                <button onclick="fecharModal('modal-despesa')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-despesa" onsubmit="salvarDespesa(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="desp-id">
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block font-semibold text-slate-700">Data</label><input type="date" id="desp-data" required class="w-full border rounded p-2 mt-1"></div>
+                    <div><label class="block font-semibold text-slate-700">Categoria</label><input type="text" id="desp-categoria" list="lista-cat-desp" required class="w-full border rounded p-2 mt-1">
+                        <datalist id="lista-cat-desp"><option>Insumos</option><option>Marketing</option><option>Frete</option><option>Embalagem</option><option>Ferramentas</option><option>Outros</option></datalist>
+                    </div>
+                </div>
+                <div><label class="block font-semibold text-slate-700">Descrição</label><input type="text" id="desp-descricao" required class="w-full border rounded p-2 mt-1"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block font-semibold text-slate-700">Valor (R$)</label><input type="number" step="0.01" min="0" id="desp-valor" required class="w-full border rounded p-2 mt-1"></div>
+                    <div><label class="block font-semibold text-slate-700">Forma de Pagamento</label>
+                        <select id="desp-forma" class="w-full border rounded p-2 mt-1"><option>PIX</option><option>Cartão</option><option>Dinheiro</option><option>Boleto</option></select>
+                    </div>
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="fecharModal('modal-despesa')" class="px-4 py-2 bg-slate-200 rounded text-slate-700 font-semibold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-brand-red hover:bg-red-600 text-white rounded font-semibold">Salvar Despesa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMACAO -->
+    <div id="modal-confirm" class="fixed inset-0 bg-black/50 modal-overlay hidden items-center justify-center z-[60] p-4">
+        <div class="bg-white w-full max-w-sm rounded-xl p-6 shadow-2xl space-y-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-red-100 text-red-600 rounded-full"><i data-lucide="alert-triangle" class="w-5 h-5"></i></div>
+                <h3 class="font-bold text-slate-800">Confirmar ação</h3>
+            </div>
+            <p id="confirm-message" class="text-sm text-slate-600"></p>
+            <div class="flex justify-end space-x-2">
+                <button onclick="fecharModal('modal-confirm')" class="px-4 py-2 bg-slate-200 rounded text-slate-700 font-semibold text-sm">Cancelar</button>
+                <button id="confirm-btn-ok" class="px-4 py-2 bg-brand-red hover:bg-red-600 text-white rounded font-semibold text-sm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOASTS -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[70] space-y-2"></div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // ==================== DADOS PADRAO (DEMO) ====================
+        const defaultProdutos = [
+            { id: 1, sku: "SKU-TSH-001", nome: "Camiseta Oversized Cyberpunk", categoria: "Camiseta", modelo: "Oversized Heavy", custo: 38.00, preco: 89.90, estoque: 25, min: 10 },
+            { id: 2, sku: "SKU-TSH-002", nome: "Camiseta Oversized Minimal", categoria: "Camiseta", modelo: "Oversized Boxy", custo: 35.50, preco: 89.90, estoque: 12, min: 15 },
+            { id: 3, sku: "SKU-ECO-001", nome: "Ecobag Acid Wash Art", categoria: "Ecobag", modelo: "Canvas 100%", custo: 23.50, preco: 59.90, estoque: 6, min: 8 },
+            { id: 4, sku: "SKU-TSH-003", nome: "Camiseta Oversized Vintage", categoria: "Camiseta", modelo: "Oversized Heavy", custo: 42.00, preco: 99.90, estoque: 18, min: 5 },
+            { id: 5, sku: "SKU-ECO-002", nome: "Ecobag Minimal Black", categoria: "Ecobag", modelo: "Ecobag Mini", custo: 18.00, preco: 49.90, estoque: 30, min: 12 }
+        ];
+
+        const defaultClientes = [
+            { id: 1, nome: "Lucas Silva", telefone: "(11) 98765-4321", instagram: "@lucas.silva", cidade: "São Paulo", obs: "" },
+            { id: 2, nome: "Beatriz Costa", telefone: "(21) 99876-5432", instagram: "@bea.costa", cidade: "Rio de Janeiro", obs: "" },
+            { id: 3, nome: "Matheus Rocha", telefone: "(31) 97654-3210", instagram: "@matheus.rocha", cidade: "Belo Horizonte", obs: "" },
+            { id: 4, nome: "Camila Alves", telefone: "(41) 98888-7777", instagram: "@camila.alves", cidade: "Curitiba", obs: "" }
+        ];
+
+        const defaultPedidos = [
+            { id: 1001, clienteId: 1, produtoId: 1, data: "2026-07-01", tamanho: "M", qtd: 2, precoUnit: 89.90, custoUnit: 38.00, status: "Entregue" },
+            { id: 1002, clienteId: 2, produtoId: 3, data: "2026-07-03", tamanho: "Único", qtd: 1, precoUnit: 59.90, custoUnit: 23.50, status: "Entregue" },
+            { id: 1003, clienteId: 3, produtoId: 2, data: "2026-07-10", tamanho: "G", qtd: 3, precoUnit: 89.90, custoUnit: 35.50, status: "Enviado" },
+            { id: 1004, clienteId: 4, produtoId: 4, data: "2026-07-15", tamanho: "GG", qtd: 1, precoUnit: 99.90, custoUnit: 42.00, status: "Produção" }
+        ];
+
+        const defaultDespesas = [
+            { id: 1, data: "2026-07-05", categoria: "Insumos", descricao: "Compra de malha e DTF", valor: 450.00, forma: "PIX" },
+            { id: 2, data: "2026-07-12", categoria: "Marketing", descricao: "Impulsionamento Instagram Ads", valor: 120.00, forma: "Cartão" }
+        ];
+
+        // ==================== ESTADO ====================
+        function getStoredData(key, defaultVal) {
+            try {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : JSON.parse(JSON.stringify(defaultVal));
+            } catch (e) { return JSON.parse(JSON.stringify(defaultVal)); }
+        }
+
+        let produtos = getStoredData('erp_produtos_v2', defaultProdutos);
+        let clientes = getStoredData('erp_clientes_v2', defaultClientes);
+        let pedidos = getStoredData('erp_pedidos_v2', defaultPedidos);
+        let despesas = getStoredData('erp_despesas_v2', defaultDespesas);
+        let metaMensal = parseFloat(localStorage.getItem('erp_meta_v2')) || 10000;
+
+        let chartCatInstance = null;
+        let chartProdInstance = null;
+
+        function persist() {
+            localStorage.setItem('erp_produtos_v2', JSON.stringify(produtos));
+            localStorage.setItem('erp_clientes_v2', JSON.stringify(clientes));
+            localStorage.setItem('erp_pedidos_v2', JSON.stringify(pedidos));
+            localStorage.setItem('erp_despesas_v2', JSON.stringify(despesas));
+            localStorage.setItem('erp_meta_v2', String(metaMensal));
+        }
+
+        function nextId(arr, start) {
+            const max = arr.reduce((m, x) => Math.max(m, x.id), start - 1);
+            return max + 1;
+        }
+
+        function escapeHtml(str) {
+            return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        function fmtMoney(v) { return 'R$ ' + (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            document.getElementById('ped-data').valueAsDate = new Date();
+            document.getElementById('desp-data').valueAsDate = new Date();
+            renderAll();
+            calcularPreco();
+        });
+
+        function resetData() {
+            produtos = JSON.parse(JSON.stringify(defaultProdutos));
+            clientes = JSON.parse(JSON.stringify(defaultClientes));
+            pedidos = JSON.parse(JSON.stringify(defaultPedidos));
+            despesas = JSON.parse(JSON.stringify(defaultDespesas));
+            metaMensal = 10000;
+            persist();
+            renderAll();
+            showToast('Dados de demonstração restaurados.', 'info');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            document.getElementById('btn-' + tabName).classList.add('active');
+
+            const titles = {
+                dashboard: 'Dashboard Geral', pedidos: 'Pedidos & Vendas', produtos: 'Catálogo de Produtos',
+                estoque: 'Controle de Estoque', clientes: 'Gestão de Clientes (CRM)', financeiro: 'Fluxo de Caixa',
+                custos: 'Engenharia de Custos', metas: 'Metas Mensais', relatorios: 'Relatórios de Desempenho'
+            };
+            document.getElementById('page-title').innerText = titles[tabName];
+            if (tabName === 'dashboard') renderCharts();
+        }
+
+        function renderAll() {
+            renderDashboard();
+            renderPedidos();
+            renderProdutos();
+            renderEstoque();
+            renderClientes();
+            renderFinanceiro();
+            renderMetas();
+            renderRelatorios();
+            renderCharts();
+            lucide.createIcons();
+        }
+
+        // ==================== HELPERS DE DOMINIO ====================
+        function pedidoAtivo(p) { return p.status !== 'Cancelado'; }
+        function pedidoValor(p) { return p.precoUnit * p.qtd; }
+        function pedidoCusto(p) { return p.custoUnit * p.qtd; }
+        function pedidoLucro(p) { return pedidoValor(p) * 0.85 - pedidoCusto(p); }
+        function getCliente(id) { return clientes.find(c => c.id === id); }
+        function getProduto(id) { return produtos.find(p => p.id === id); }
+
+        // ==================== DASHBOARD ====================
+        function renderDashboard() {
+            const ativos = pedidos.filter(pedidoAtivo);
+            const receitaTotal = ativos.reduce((acc, p) => acc + pedidoValor(p), 0);
+            const lucroBruto = ativos.reduce((acc, p) => acc + pedidoLucro(p), 0);
+            const despesasTotal = despesas.reduce((acc, d) => acc + d.valor, 0);
+            const lucroLiquido = lucroBruto - despesasTotal;
+            const totalPedidos = pedidos.length;
+            const ticketMedio = ativos.length > 0 ? receitaTotal / ativos.length : 0;
+            const margemMedia = receitaTotal > 0 ? (lucroLiquido / receitaTotal) * 100 : 0;
+
+            const estoqueTotalVal = produtos.reduce((acc, pr) => acc + pr.estoque, 0);
+            const criticos = produtos.filter(pr => pr.estoque <= pr.min);
+
+            document.getElementById('kpi-receita').innerText = fmtMoney(receitaTotal);
+            document.getElementById('kpi-lucro').innerText = fmtMoney(lucroLiquido);
+            document.getElementById('kpi-margem-lucro').innerText = `Margem Líq: ${margemMedia.toFixed(1)}%`;
+            document.getElementById('kpi-despesas').innerText = fmtMoney(despesasTotal);
+            document.getElementById('kpi-pedidos').innerText = totalPedidos;
+            document.getElementById('kpi-ticket').innerText = 'Ticket Médio: ' + fmtMoney(ticketMedio);
+            document.getElementById('kpi-estoque').innerText = estoqueTotalVal + ' un';
+            document.getElementById('kpi-critico').innerText = `${criticos.length} item(ns) abaixo do mínimo`;
+
+            const ultimos = [...pedidos].sort((a, b) => b.id - a.id).slice(0, 5);
+            const ultDiv = document.getElementById('dash-ultimos-pedidos');
+            ultDiv.innerHTML = ultimos.length ? ultimos.map(p => {
+                const cli = getCliente(p.clienteId);
+                const prod = getProduto(p.produtoId);
+                return `<div class="flex justify-between py-2">
+                    <span>#${p.id} · ${escapeHtml(cli ? cli.nome : '—')} · ${escapeHtml(prod ? prod.nome : '—')}</span>
+                    <span class="font-bold">${fmtMoney(pedidoValor(p))}</span>
+                </div>`;
+            }).join('') : '<p class="text-slate-400 py-4 text-center">Nenhum pedido ainda.</p>';
+
+            const critDiv = document.getElementById('dash-estoque-critico');
+            critDiv.innerHTML = criticos.length ? criticos.map(pr => `
+                <div class="flex justify-between py-2">
+                    <span>${escapeHtml(pr.nome)}</span>
+                    <span class="font-bold text-red-600">${pr.estoque} un (mín ${pr.min})</span>
+                </div>`).join('') : '<p class="text-slate-400 py-4 text-center">Nenhum item crítico. 🎉</p>';
+        }
+
+        // ==================== PEDIDOS (CRUD) ====================
+        function popularSelectClientes(selectEl, selectedId) {
+            selectEl.innerHTML = clientes.map(c => `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${escapeHtml(c.nome)}</option>`).join('');
+        }
+        function popularSelectProdutos(selectEl, selectedId) {
+            selectEl.innerHTML = produtos.map(p => `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${escapeHtml(p.nome)} (${fmtMoney(p.preco)}) — ${p.estoque} em estoque</option>`).join('');
+        }
+
+        function abrirModalPedido(id) {
+            if (clientes.length === 0) { showToast('Cadastre um cliente antes de criar um pedido.', 'error'); abrirModalCliente(); return; }
+            if (produtos.length === 0) { showToast('Cadastre um produto antes de criar um pedido.', 'error'); abrirModalProduto(); return; }
+            const editando = id != null;
+            const p = editando ? pedidos.find(x => x.id === id) : null;
+            document.getElementById('modal-pedido-titulo').innerText = editando ? `Editar Pedido #${id}` : 'Cadastrar Novo Pedido';
+            document.getElementById('ped-id').value = editando ? id : '';
+            popularSelectClientes(document.getElementById('ped-cliente'), p ? p.clienteId : clientes[0].id);
+            popularSelectProdutos(document.getElementById('ped-produto'), p ? p.produtoId : produtos[0].id);
+            document.getElementById('ped-tamanho').value = p ? p.tamanho : 'M';
+            document.getElementById('ped-qtd').value = p ? p.qtd : 1;
+            document.getElementById('ped-status').value = p ? p.status : 'Entregue';
+            document.getElementById('ped-data').value = p ? p.data : new Date().toISOString().split('T')[0];
+            atualizarResumoPedido();
+            abrirModal('modal-pedido');
+        }
+
+        function atualizarResumoPedido() {
+            const prodId = parseInt(document.getElementById('ped-produto').value);
+            const prod = getProduto(prodId);
+            const qtd = parseInt(document.getElementById('ped-qtd').value) || 0;
+            const status = document.getElementById('ped-status').value;
+            if (!prod) return;
+            const total = prod.preco * qtd;
+            const lucro = total * 0.85 - prod.custo * qtd;
+            const alerta = qtd > prod.estoque ? `<p class="text-red-600 font-semibold mt-1">⚠ Estoque insuficiente (disponível: ${prod.estoque} un)</p>` : '';
+            document.getElementById('ped-resumo').innerHTML = `
+                <div class="flex justify-between"><span>Total do pedido:</span><b>${fmtMoney(total)}</b></div>
+                <div class="flex justify-between"><span>Lucro estimado:</span><b class="text-emerald-600">${fmtMoney(lucro)}</b></div>
+                ${status === 'Cancelado' ? '<p class="text-amber-600 mt-1">Pedido cancelado não afeta receita nem estoque.</p>' : alerta}
+            `;
+        }
+
+        function salvarPedido(e) {
+            e.preventDefault();
+            const idField = document.getElementById('ped-id').value;
+            const editando = idField !== '';
+            const clienteId = parseInt(document.getElementById('ped-cliente').value);
+            const produtoId = parseInt(document.getElementById('ped-produto').value);
+            const prod = getProduto(produtoId);
+            const qtd = parseInt(document.getElementById('ped-qtd').value);
+            const status = document.getElementById('ped-status').value;
+            const data = document.getElementById('ped-data').value;
+
+            if (editando) {
+                const old = pedidos.find(x => x.id === parseInt(idField));
+                if (pedidoAtivo(old)) ajustarEstoque(old.produtoId, old.qtd); // restaura estoque antigo
+                old.clienteId = clienteId; old.produtoId = produtoId; old.data = data;
+                old.tamanho = document.getElementById('ped-tamanho').value;
+                old.qtd = qtd; old.status = status;
+                old.precoUnit = prod.preco; old.custoUnit = prod.custo;
+                if (status !== 'Cancelado') ajustarEstoque(produtoId, -qtd);
+                showToast(`Pedido #${old.id} atualizado com sucesso.`, 'success');
+            } else {
+                const novo = {
+                    id: nextId(pedidos, 1001), clienteId, produtoId, data,
+                    tamanho: document.getElementById('ped-tamanho').value,
+                    qtd, precoUnit: prod.preco, custoUnit: prod.custo, status
+                };
+                pedidos.push(novo);
+                if (status !== 'Cancelado') ajustarEstoque(produtoId, -qtd);
+                showToast(`Pedido #${novo.id} cadastrado com sucesso.`, 'success');
+            }
+            persist();
+            fecharModal('modal-pedido');
+            renderAll();
+        }
+
+        function editarPedido(id) { abrirModalPedido(id); }
+
+        function excluirPedido(id) {
+            confirmarAcao(`Excluir o pedido #${id}? O estoque será restaurado automaticamente.`, () => {
+                const p = pedidos.find(x => x.id === id);
+                if (p && pedidoAtivo(p)) ajustarEstoque(p.produtoId, p.qtd);
+                pedidos = pedidos.filter(x => x.id !== id);
+                persist();
+                renderAll();
+                showToast(`Pedido #${id} excluído.`, 'info');
+            });
+        }
+
+        function ajustarEstoque(produtoId, delta) {
+            const pr = getProduto(produtoId);
+            if (pr) pr.estoque = Math.max(0, pr.estoque + delta);
+        }
+
+        function renderPedidos() {
+            const busca = (document.getElementById('busca-pedido').value || '').toLowerCase();
+            const filtroStatus = document.getElementById('filtro-status-pedido').value;
+            const tbody = document.getElementById('table-pedidos-body');
+            tbody.innerHTML = '';
+
+            const lista = pedidos.filter(p => {
+                const cli = getCliente(p.clienteId);
+                const prod = getProduto(p.produtoId);
+                const texto = `${cli ? cli.nome : ''} ${prod ? prod.nome : ''}`.toLowerCase();
+                const matchBusca = !busca || texto.includes(busca);
+                const matchStatus = !filtroStatus || p.status === filtroStatus;
+                return matchBusca && matchStatus;
+            }).sort((a, b) => b.id - a.id);
+
+            document.getElementById('pedidos-empty').classList.toggle('hidden', lista.length !== 0);
+
+            lista.forEach(p => {
+                const cli = getCliente(p.clienteId);
+                const prod = getProduto(p.produtoId);
+                const statusBg = { Entregue: 'bg-emerald-100 text-emerald-800', Produção: 'bg-amber-100 text-amber-800', Aguardando: 'bg-slate-200 text-slate-700', Pronto: 'bg-blue-100 text-blue-800', Enviado: 'bg-indigo-100 text-indigo-800', Cancelado: 'bg-red-100 text-red-700' }[p.status] || 'bg-slate-100 text-slate-700';
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3">#${p.id}</td>
+                        <td class="p-3">${p.data}</td>
+                        <td class="p-3 font-semibold text-slate-800">${escapeHtml(cli ? cli.nome : '<cliente removido>')}</td>
+                        <td class="p-3">${escapeHtml(prod ? prod.nome : '<produto removido>')}</td>
+                        <td class="p-3">${escapeHtml(prod ? prod.categoria : '-')}</td>
+                        <td class="p-3">${p.tamanho}</td>
+                        <td class="p-3">${p.qtd}</td>
+                        <td class="p-3 font-bold text-slate-800">${fmtMoney(pedidoValor(p))}</td>
+                        <td class="p-3 text-emerald-600 font-bold">${fmtMoney(pedidoLucro(p))}</td>
+                        <td class="p-3"><span class="px-2 py-1 rounded-full text-2xs font-bold ${statusBg}">${p.status}</span></td>
+                        <td class="p-3 text-right whitespace-nowrap">
+                            <button onclick="editarPedido(${p.id})" class="btn-icon text-slate-500" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                            <button onclick="excluirPedido(${p.id})" class="btn-icon text-red-500" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>`;
+            });
+            lucide.createIcons();
+        }
+
+        // ==================== PRODUTOS (CRUD) ====================
+        function abrirModalProduto(id) {
+            const editando = id != null;
+            const p = editando ? getProduto(id) : null;
+            document.getElementById('modal-produto-titulo').innerText = editando ? 'Editar Produto' : 'Cadastrar Produto';
+            document.getElementById('prod-id').value = editando ? id : '';
+            document.getElementById('prod-sku').value = p ? p.sku : `SKU-${String(nextId(produtos, 1)).padStart(3, '0')}`;
+            document.getElementById('prod-categoria').value = p ? p.categoria : '';
+            document.getElementById('prod-nome').value = p ? p.nome : '';
+            document.getElementById('prod-modelo').value = p ? p.modelo : '';
+            document.getElementById('prod-custo').value = p ? p.custo : '';
+            document.getElementById('prod-preco').value = p ? p.preco : '';
+            document.getElementById('prod-estoque').value = p ? p.estoque : 0;
+            document.getElementById('prod-min').value = p ? p.min : 5;
+            abrirModal('modal-produto');
+        }
+
+        function salvarProduto(e) {
+            e.preventDefault();
+            const idField = document.getElementById('prod-id').value;
+            const dados = {
+                sku: document.getElementById('prod-sku').value.trim(),
+                categoria: document.getElementById('prod-categoria').value.trim(),
+                nome: document.getElementById('prod-nome').value.trim(),
+                modelo: document.getElementById('prod-modelo').value.trim(),
+                custo: parseFloat(document.getElementById('prod-custo').value) || 0,
+                preco: parseFloat(document.getElementById('prod-preco').value) || 0,
+                estoque: parseInt(document.getElementById('prod-estoque').value) || 0,
+                min: parseInt(document.getElementById('prod-min').value) || 0
+            };
+            if (idField !== '') {
+                const old = getProduto(parseInt(idField));
+                Object.assign(old, dados);
+                showToast('Produto atualizado com sucesso.', 'success');
+            } else {
+                produtos.push({ id: nextId(produtos, 1), ...dados });
+                showToast('Produto cadastrado com sucesso.', 'success');
+            }
+            persist();
+            fecharModal('modal-produto');
+            renderAll();
+        }
+
+        function editarProduto(id) { abrirModalProduto(id); }
+
+        function excluirProduto(id) {
+            const emUso = pedidos.some(p => p.produtoId === id);
+            if (emUso) { showToast('Não é possível excluir: produto vinculado a pedidos existentes.', 'error'); return; }
+            confirmarAcao('Excluir este produto do catálogo?', () => {
+                produtos = produtos.filter(p => p.id !== id);
+                persist();
+                renderAll();
+                showToast('Produto excluído.', 'info');
+            });
+        }
+
+        function renderProdutos() {
+            const busca = (document.getElementById('busca-produto').value || '').toLowerCase();
+            const tbody = document.getElementById('table-produtos-body');
+            tbody.innerHTML = '';
+            const lista = produtos.filter(pr => !busca || `${pr.nome} ${pr.sku} ${pr.categoria}`.toLowerCase().includes(busca));
+            document.getElementById('produtos-empty').classList.toggle('hidden', lista.length !== 0);
+
+            lista.forEach(pr => {
+                const margemBruta = pr.preco > 0 ? ((pr.preco - pr.custo) / pr.preco) * 100 : 0;
+                const critico = pr.estoque <= pr.min;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-mono">${escapeHtml(pr.sku)}</td>
+                        <td class="p-3 font-semibold text-slate-800">${escapeHtml(pr.nome)}</td>
+                        <td class="p-3">${escapeHtml(pr.categoria)}</td>
+                        <td class="p-3">${escapeHtml(pr.modelo)}</td>
+                        <td class="p-3">${fmtMoney(pr.custo)}</td>
+                        <td class="p-3 font-bold">${fmtMoney(pr.preco)}</td>
+                        <td class="p-3 text-emerald-600 font-bold">${margemBruta.toFixed(1)}%</td>
+                        <td class="p-3 font-bold ${critico ? 'text-red-600' : 'text-slate-800'}">${pr.estoque} un</td>
+                        <td class="p-3">${critico ? '<span class="px-2 py-0.5 rounded bg-red-100 text-red-700 text-2xs font-bold">Crítico</span>' : '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-2xs font-bold">Normal</span>'}</td>
+                        <td class="p-3 text-right whitespace-nowrap">
+                            <button onclick="editarProduto(${pr.id})" class="btn-icon text-slate-500" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                            <button onclick="excluirProduto(${pr.id})" class="btn-icon text-red-500" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>`;
+            });
+            lucide.createIcons();
+        }
+
+        // ==================== ESTOQUE ====================
+        function renderEstoque() {
+            const soCriticos = document.getElementById('filtro-estoque-critico').checked;
+            const tbody = document.getElementById('table-estoque-body');
+            tbody.innerHTML = '';
+            produtos.filter(pr => !soCriticos || pr.estoque <= pr.min).forEach(pr => {
+                const vendidos = pedidos.filter(p => p.produtoId === pr.id && pedidoAtivo(p)).reduce((acc, p) => acc + p.qtd, 0);
+                const critico = pr.estoque <= pr.min;
+                const sugestao = critico ? (pr.min * 2) - pr.estoque : 0;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-mono">${escapeHtml(pr.sku)}</td>
+                        <td class="p-3 font-semibold text-slate-800">${escapeHtml(pr.nome)}</td>
+                        <td class="p-3">${escapeHtml(pr.categoria)}</td>
+                        <td class="p-3 text-amber-600 font-bold">${vendidos}</td>
+                        <td class="p-3 font-bold ${critico ? 'text-red-600' : 'text-slate-800'}">${pr.estoque} un</td>
+                        <td class="p-3">${pr.min}</td>
+                        <td class="p-3">${critico ? '<span class="px-2 py-0.5 rounded bg-red-100 text-red-700 text-2xs font-bold">Crítico</span>' : '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-2xs font-bold">Normal</span>'}</td>
+                        <td class="p-3 font-bold text-blue-600">${sugestao > 0 ? sugestao + ' un' : '-'}</td>
+                    </tr>`;
+            });
+        }
+
+        // ==================== CLIENTES (CRUD) ====================
+        function abrirModalCliente(id) {
+            const editando = id != null;
+            const c = editando ? getCliente(id) : null;
+            document.getElementById('modal-cliente-titulo').innerText = editando ? 'Editar Cliente' : 'Cadastrar Cliente';
+            document.getElementById('cli-id').value = editando ? id : '';
+            document.getElementById('cli-nome').value = c ? c.nome : '';
+            document.getElementById('cli-telefone').value = c ? c.telefone : '';
+            document.getElementById('cli-instagram').value = c ? c.instagram : '';
+            document.getElementById('cli-cidade').value = c ? c.cidade : '';
+            document.getElementById('cli-obs').value = c ? c.obs : '';
+            abrirModal('modal-cliente');
+        }
+
+        function salvarCliente(e) {
+            e.preventDefault();
+            const idField = document.getElementById('cli-id').value;
+            const dados = {
+                nome: document.getElementById('cli-nome').value.trim(),
+                telefone: document.getElementById('cli-telefone').value.trim(),
+                instagram: document.getElementById('cli-instagram').value.trim(),
+                cidade: document.getElementById('cli-cidade').value.trim(),
+                obs: document.getElementById('cli-obs').value.trim()
+            };
+            if (idField !== '') {
+                Object.assign(getCliente(parseInt(idField)), dados);
+                showToast('Cliente atualizado com sucesso.', 'success');
+            } else {
+                clientes.push({ id: nextId(clientes, 1), ...dados });
+                showToast('Cliente cadastrado com sucesso.', 'success');
+            }
+            persist();
+            fecharModal('modal-cliente');
+            renderAll();
+        }
+
+        function editarCliente(id) { abrirModalCliente(id); }
+
+        function excluirCliente(id) {
+            const emUso = pedidos.some(p => p.clienteId === id);
+            if (emUso) { showToast('Não é possível excluir: cliente possui pedidos vinculados.', 'error'); return; }
+            confirmarAcao('Excluir este cliente?', () => {
+                clientes = clientes.filter(c => c.id !== id);
+                persist();
+                renderAll();
+                showToast('Cliente excluído.', 'info');
+            });
+        }
+
+        function renderClientes() {
+            const busca = (document.getElementById('busca-cliente').value || '').toLowerCase();
+            const tbody = document.getElementById('table-clientes-body');
+            tbody.innerHTML = '';
+
+            const lista = clientes.filter(c => !busca || `${c.nome} ${c.cidade}`.toLowerCase().includes(busca));
+            document.getElementById('clientes-empty').classList.toggle('hidden', lista.length !== 0);
+
+            lista.forEach(c => {
+                const pedidosCliente = pedidos.filter(p => p.clienteId === c.id && pedidoAtivo(p));
+                const totalGasto = pedidosCliente.reduce((acc, p) => acc + pedidoValor(p), 0);
+                const qtdPedidos = pedidosCliente.length;
+                const ticket = qtdPedidos > 0 ? totalGasto / qtdPedidos : 0;
+                const isVip = totalGasto > 200;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-semibold text-slate-800">${escapeHtml(c.nome)}</td>
+                        <td class="p-3">${escapeHtml(c.telefone)}</td>
+                        <td class="p-3 text-blue-500">${escapeHtml(c.instagram)}</td>
+                        <td class="p-3">${escapeHtml(c.cidade)}</td>
+                        <td class="p-3 font-bold">${qtdPedidos}</td>
+                        <td class="p-3 font-bold text-slate-800">${fmtMoney(totalGasto)}</td>
+                        <td class="p-3">${fmtMoney(ticket)}</td>
+                        <td class="p-3">${isVip ? '<span class="px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-bold text-2xs">VIP</span>' : '<span class="text-slate-400">Regular</span>'}</td>
+                        <td class="p-3 text-right whitespace-nowrap">
+                            <button onclick="editarCliente(${c.id})" class="btn-icon text-slate-500" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                            <button onclick="excluirCliente(${c.id})" class="btn-icon text-red-500" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>`;
+            });
+            lucide.createIcons();
+        }
+
+        // ==================== FINANCEIRO (DESPESAS CRUD) ====================
+        function abrirModalDespesa(id) {
+            const editando = id != null;
+            const d = editando ? despesas.find(x => x.id === id) : null;
+            document.getElementById('modal-despesa-titulo').innerText = editando ? 'Editar Despesa' : 'Lançar Despesa';
+            document.getElementById('desp-id').value = editando ? id : '';
+            document.getElementById('desp-data').value = d ? d.data : new Date().toISOString().split('T')[0];
+            document.getElementById('desp-categoria').value = d ? d.categoria : '';
+            document.getElementById('desp-descricao').value = d ? d.descricao : '';
+            document.getElementById('desp-valor').value = d ? d.valor : '';
+            document.getElementById('desp-forma').value = d ? d.forma : 'PIX';
+            abrirModal('modal-despesa');
+        }
+
+        function salvarDespesa(e) {
+            e.preventDefault();
+            const idField = document.getElementById('desp-id').value;
+            const dados = {
+                data: document.getElementById('desp-data').value,
+                categoria: document.getElementById('desp-categoria').value.trim(),
+                descricao: document.getElementById('desp-descricao').value.trim(),
+                valor: parseFloat(document.getElementById('desp-valor').value) || 0,
+                forma: document.getElementById('desp-forma').value
+            };
+            if (idField !== '') {
+                Object.assign(despesas.find(x => x.id === parseInt(idField)), dados);
+                showToast('Despesa atualizada.', 'success');
+            } else {
+                despesas.push({ id: nextId(despesas, 1), ...dados });
+                showToast('Despesa lançada com sucesso.', 'success');
+            }
+            persist();
+            fecharModal('modal-despesa');
+            renderAll();
+        }
+
+        function excluirDespesa(id) {
+            confirmarAcao('Excluir esta despesa?', () => {
+                despesas = despesas.filter(d => d.id !== id);
+                persist();
+                renderAll();
+                showToast('Despesa excluída.', 'info');
+            });
+        }
+
+        function renderFinanceiro() {
+            const tbody = document.getElementById('table-financeiro-body');
+            tbody.innerHTML = '';
+
+            const receitaTotal = pedidos.filter(pedidoAtivo).reduce((acc, p) => acc + pedidoValor(p), 0);
+            const despesaTotal = despesas.reduce((acc, d) => acc + d.valor, 0);
+            document.getElementById('fin-receitas').innerText = fmtMoney(receitaTotal);
+            document.getElementById('fin-despesas').innerText = fmtMoney(despesaTotal);
+            document.getElementById('fin-saldo').innerText = fmtMoney(receitaTotal - despesaTotal);
+
+            const linhas = [];
+            pedidos.filter(pedidoAtivo).forEach(p => {
+                const cli = getCliente(p.clienteId);
+                linhas.push({ data: p.data, tipo: 'Receita', categoria: 'Vendas', desc: `Pedido #${p.id} - ${cli ? cli.nome : '-'}`, valor: pedidoValor(p), forma: 'PIX / Cartão', neg: false });
+            });
+            despesas.forEach(d => {
+                linhas.push({ data: d.data, tipo: 'Despesa', categoria: d.categoria, desc: d.descricao, valor: d.valor, forma: d.forma, neg: true, id: d.id });
+            });
+            linhas.sort((a, b) => (a.data < b.data ? 1 : -1));
+
+            linhas.forEach(l => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3">${l.data}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 ${l.neg ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'} rounded text-2xs font-bold">${l.tipo}</span></td>
+                        <td class="p-3">${escapeHtml(l.categoria)}</td>
+                        <td class="p-3">${escapeHtml(l.desc)}</td>
+                        <td class="p-3 font-bold ${l.neg ? 'text-red-600' : 'text-emerald-600'}">${l.neg ? '- ' : '+ '}${fmtMoney(l.valor)}</td>
+                        <td class="p-3">${escapeHtml(l.forma)}</td>
+                        <td class="p-3 text-right whitespace-nowrap">${l.neg ? `
+                            <button onclick="abrirModalDespesa(${l.id})" class="btn-icon text-slate-500" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                            <button onclick="excluirDespesa(${l.id})" class="btn-icon text-red-500" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : '<span class="text-slate-300">—</span>'}
+                        </td>
+                    </tr>`;
+            });
+            lucide.createIcons();
+        }
+
+        // ==================== METAS ====================
+        function renderMetas() {
+            const receitaTotal = pedidos.filter(pedidoAtivo).reduce((acc, p) => acc + pedidoValor(p), 0);
+            const perc = metaMensal > 0 ? Math.min((receitaTotal / metaMensal) * 100, 100) : 0;
+            document.getElementById('meta-bar').style.width = perc + '%';
+            document.getElementById('meta-perc-text').innerText = perc.toFixed(1) + '% Atingido';
+            document.getElementById('meta-realizado').innerText = fmtMoney(receitaTotal);
+            document.getElementById('meta-alvo-label').innerText = fmtMoney(metaMensal);
+            document.getElementById('meta-input').value = metaMensal;
+        }
+
+        function salvarMeta() {
+            const val = parseFloat(document.getElementById('meta-input').value);
+            if (!val || val <= 0) { showToast('Informe um valor de meta válido.', 'error'); return; }
+            metaMensal = val;
+            persist();
+            renderMetas();
+            showToast('Meta atualizada com sucesso.', 'success');
+        }
+
+        // ==================== RELATORIOS ====================
+        function renderRelatorios() {
+            const container = document.getElementById('relatorio-categoria-container');
+            const catMap = {};
+            pedidos.filter(pedidoAtivo).forEach(p => {
+                const prod = getProduto(p.produtoId);
+                const cat = prod ? prod.categoria : 'Sem categoria';
+                if (!catMap[cat]) catMap[cat] = { total: 0, qtd: 0 };
+                catMap[cat].total += pedidoValor(p);
+                catMap[cat].qtd += p.qtd;
+            });
+            let html = `<table class="w-full text-left text-xs text-slate-600 border"><thead class="bg-slate-100"><tr><th class="p-2">Categoria</th><th class="p-2">Qtd Vendida</th><th class="p-2">Faturamento</th></tr></thead><tbody>`;
+            Object.keys(catMap).forEach(cat => {
+                html += `<tr class="border-t"><td class="p-2 font-semibold">${escapeHtml(cat)}</td><td class="p-2">${catMap[cat].qtd} un</td><td class="p-2 font-bold text-slate-800">${fmtMoney(catMap[cat].total)}</td></tr>`;
+            });
+            if (Object.keys(catMap).length === 0) html += `<tr><td colspan="3" class="p-3 text-center text-slate-400">Sem dados ainda.</td></tr>`;
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+
+            const clienteContainer = document.getElementById('relatorio-clientes-container');
+            const rank = clientes.map(c => {
+                const seus = pedidos.filter(p => p.clienteId === c.id && pedidoAtivo(p));
+                return { nome: c.nome, total: seus.reduce((acc, p) => acc + pedidoValor(p), 0) };
+            }).sort((a, b) => b.total - a.total).slice(0, 5).filter(c => c.total > 0);
+
+            let html2 = `<table class="w-full text-left text-xs text-slate-600 border"><thead class="bg-slate-100"><tr><th class="p-2">#</th><th class="p-2">Cliente</th><th class="p-2">Total Gasto</th></tr></thead><tbody>`;
+            rank.forEach((c, i) => { html2 += `<tr class="border-t"><td class="p-2">${i + 1}º</td><td class="p-2 font-semibold">${escapeHtml(c.nome)}</td><td class="p-2 font-bold text-slate-800">${fmtMoney(c.total)}</td></tr>`; });
+            if (rank.length === 0) html2 += `<tr><td colspan="3" class="p-3 text-center text-slate-400">Sem dados ainda.</td></tr>`;
+            html2 += `</tbody></table>`;
+            clienteContainer.innerHTML = html2;
+        }
+
+        // ==================== CHARTS ====================
+        function renderCharts() {
+            const catTotals = {};
+            pedidos.filter(pedidoAtivo).forEach(p => {
+                const prod = getProduto(p.produtoId);
+                const cat = prod ? prod.categoria : 'Sem categoria';
+                catTotals[cat] = (catTotals[cat] || 0) + pedidoValor(p);
+            });
+            const catCtx = document.getElementById('chartCategoria').getContext('2d');
+            if (chartCatInstance) chartCatInstance.destroy();
+            chartCatInstance = new Chart(catCtx, {
+                type: 'doughnut',
+                data: { labels: Object.keys(catTotals), datasets: [{ data: Object.values(catTotals), backgroundColor: ['#4F8EF7', '#22C55E', '#FBBF24', '#A855F7', '#EF4444'] }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const prodTotals = {};
+            pedidos.filter(pedidoAtivo).forEach(p => {
+                const prod = getProduto(p.produtoId);
+                const nome = prod ? prod.nome : 'Removido';
+                prodTotals[nome] = (prodTotals[nome] || 0) + p.qtd;
+            });
+            const prodCtx = document.getElementById('chartProdutos').getContext('2d');
+            if (chartProdInstance) chartProdInstance.destroy();
+            chartProdInstance = new Chart(prodCtx, {
+                type: 'bar',
+                data: { labels: Object.keys(prodTotals), datasets: [{ label: 'Unidades Vendidas', data: Object.values(prodTotals), backgroundColor: '#1F3A5F' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        // ==================== CALCULADORA DE CUSTOS ====================
+        function calcularPreco() {
+            const malha = parseFloat(document.getElementById('calc-malha').value) || 0;
+            const dtf = parseFloat(document.getElementById('calc-dtf').value) || 0;
+            const etiq = parseFloat(document.getElementById('calc-etiq').value) || 0;
+            const mao = parseFloat(document.getElementById('calc-mao').value) || 0;
+            const custoTotal = malha + dtf + etiq + mao;
+            const precoSugerido = custoTotal * 2.35;
+            const lucroEst = precoSugerido * 0.84 - custoTotal;
+            document.getElementById('res-custo-total').innerText = fmtMoney(custoTotal);
+            document.getElementById('res-preco-sugerido').innerText = fmtMoney(precoSugerido);
+            document.getElementById('res-lucro-est').innerText = fmtMoney(lucroEst);
+        }
+
+        // ==================== EXPORTACAO CSV ====================
+        function exportarCSV(tipo) {
+            let linhas = [];
+            if (tipo === 'pedidos') {
+                linhas.push(['ID', 'Data', 'Cliente', 'Produto', 'Categoria', 'Tamanho', 'Qtd', 'Total', 'Lucro', 'Status']);
+                pedidos.forEach(p => {
+                    const cli = getCliente(p.clienteId); const prod = getProduto(p.produtoId);
+                    linhas.push([p.id, p.data, cli ? cli.nome : '', prod ? prod.nome : '', prod ? prod.categoria : '', p.tamanho, p.qtd, pedidoValor(p).toFixed(2), pedidoLucro(p).toFixed(2), p.status]);
+                });
+            } else if (tipo === 'produtos') {
+                linhas.push(['SKU', 'Nome', 'Categoria', 'Modelo', 'Custo', 'Preço', 'Estoque', 'Mínimo']);
+                produtos.forEach(pr => linhas.push([pr.sku, pr.nome, pr.categoria, pr.modelo, pr.custo.toFixed(2), pr.preco.toFixed(2), pr.estoque, pr.min]));
+            } else if (tipo === 'clientes') {
+                linhas.push(['Nome', 'Telefone', 'Instagram', 'Cidade', 'Observações']);
+                clientes.forEach(c => linhas.push([c.nome, c.telefone, c.instagram, c.cidade, c.obs]));
+            }
+            const csv = '\uFEFF' + linhas.map(l => l.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(';')).join('\r\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `${tipo}_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Exportação concluída.', 'success');
+        }
+
+        // ==================== MODAIS / TOAST / CONFIRMACAO ====================
+        function abrirModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); lucide.createIcons(); }
+        function fecharModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+
+        let _confirmCallback = null;
+        function confirmarAcao(mensagem, callback) {
+            document.getElementById('confirm-message').innerText = mensagem;
+            _confirmCallback = callback;
+            abrirModal('modal-confirm');
+        }
+        document.getElementById('confirm-btn-ok').addEventListener('click', () => {
+            if (_confirmCallback) _confirmCallback();
+            _confirmCallback = null;
+            fecharModal('modal-confirm');
+        });
+
+        function showToast(message, type) {
+            const container = document.getElementById('toast-container');
+            const colors = { success: 'bg-emerald-600', error: 'bg-red-600', info: 'bg-navy-800' }[type] || 'bg-navy-800';
+            const icons = { success: 'check-circle', error: 'x-circle', info: 'info' }[type] || 'info';
+            const toast = document.createElement('div');
+            toast.className = `toast ${colors} text-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 max-w-xs`;
+            toast.innerHTML = `<i data-lucide="${icons}" class="w-4 h-4 flex-shrink-0"></i><span>${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity .3s'; setTimeout(() => toast.remove(), 300); }, 3500);
+        }
+    </script>
 </body>
 </html>
