@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3A5F">
+<title>Streetwear ERP PWA</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body{font-family:Inter,system-ui,sans-serif}
+.card{background:#fff;border-radius:1rem;padding:1rem;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.dark body{background:#0f172a;color:#e2e8f0}
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+<div class="min-h-screen flex">
+<aside class="w-64 bg-slate-900 text-white p-4 hidden md:block">
+<h1 class="text-xl font-bold">Streetwear ERP</h1>
+<p class="text-xs text-slate-400">Oversized & Ecobags</p>
+<nav class="mt-6 space-y-2 text-sm">
+<button class="w-full text-left px-3 py-2 rounded-lg bg-blue-600">Dashboard</button>
+<button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800">Produtos</button>
+<button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800">Pedidos</button>
+<button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800">Produção</button>
+<button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800">Estoque</button>
+</nav>
+</aside>
+<main class="flex-1 p-6 space-y-6">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="text-2xl font-bold">Dashboard</h2>
+<p class="text-sm text-slate-500">Controle interno da loja</p>
+</div>
+<button id="themeBtn" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm">Alternar tema</button>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="card"><p class="text-xs uppercase text-slate-400">Receita</p><h3 class="text-2xl font-bold">R$ 8.940</h3></div>
+<div class="card"><p class="text-xs uppercase text-slate-400">Lucro</p><h3 class="text-2xl font-bold text-emerald-600">R$ 3.580</h3></div>
+<div class="card"><p class="text-xs uppercase text-slate-400">Pedidos</p><h3 class="text-2xl font-bold">83</h3></div>
+<div class="card"><p class="text-xs uppercase text-slate-400">Estoque crítico</p><h3 class="text-2xl font-bold text-red-500">3 itens</h3></div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="card"><h4 class="font-semibold mb-3">Vendas por categoria</h4><canvas id="chartCategoria" height="220"></canvas></div>
+<div class="card"><h4 class="font-semibold mb-3">Produção da semana</h4><canvas id="chartProducao" height="220"></canvas></div>
+</div>
+
+<div class="card space-y-4">
+<div class="flex items-center justify-between">
+<div>
+<h4 class="font-semibold">Upload de fotos dos produtos</h4>
+<p class="text-xs text-slate-500">Selecione imagens para enviar ao Supabase Storage.</p>
+</div>
+<button class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm">Sincronizar</button>
+</div>
+<div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center">
+<input type="file" id="fotoProduto" multiple accept="image/*" class="mx-auto block text-sm">
+<p class="mt-3 text-xs text-slate-500">Use o bucket <strong>product-images</strong> do Supabase.</p>
+</div>
+</div>
+
+<div class="card">
+<div class="flex items-center justify-between mb-4">
+<h4 class="font-semibold">Controle de produção</h4>
+<button class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm">Novo estágio</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
+<div class="rounded-xl border border-slate-200 p-4"><p class="font-semibold text-slate-700">Impressão</p><p class="text-2xl font-bold mt-2">4</p></div>
+<div class="rounded-xl border border-slate-200 p-4"><p class="font-semibold text-slate-700">Prensagem</p><p class="text-2xl font-bold mt-2">7</p></div>
+<div class="rounded-xl border border-slate-200 p-4"><p class="font-semibold text-slate-700">Embalagem</p><p class="text-2xl font-bold mt-2">3</p></div>
+<div class="rounded-xl border border-slate-200 p-4"><p class="font-semibold text-slate-700">Expedição</p><p class="text-2xl font-bold mt-2">2</p></div>
+</div>
+</div>
+
+<div class="card">
+<h4 class="font-semibold mb-3">Produtos recentes</h4>
+<div class="overflow-x-auto">
+<table class="w-full text-sm">
+<thead><tr class="text-left text-slate-500"><th class="pb-2">Produto</th><th class="pb-2">Categoria</th><th class="pb-2">Estoque</th><th class="pb-2">Preço</th></tr></thead>
+<tbody class="divide-y divide-slate-100">
+<tr><td class="py-3 font-medium">Oversized Cyberpunk</td><td>Camiseta</td><td>25</td><td>R$ 89,90</td></tr>
+<tr><td class="py-3 font-medium">Ecobag Minimal Black</td><td>Ecobag</td><td>30</td><td>R$ 49,90</td></tr>
+<tr><td class="py-3 font-medium">Oversized Vintage</td><td>Camiseta</td><td>18</td><td>R$ 99,90</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+
+<script>
+new Chart(document.getElementById('chartCategoria'),{type:'doughnut',data:{labels:['Camisetas','Ecobags'],datasets:[{data:[7200,1740],backgroundColor:['#2563eb','#22c55e']}]},options:{plugins:{legend:{position:'bottom'}}}});
+new Chart(document.getElementById('chartProducao'),{type:'bar',data:{labels:['Seg','Ter','Qua','Qui','Sex','Sáb'],datasets:[{label:'Peças produzidas',data:[12,18,15,22,19,9],backgroundColor:'#2563eb',borderRadius:8}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+document.getElementById('themeBtn').addEventListener('click',()=>{document.documentElement.classList.toggle('dark');document.body.classList.toggle('bg-slate-900');document.body.classList.toggle('text-slate-100');});
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}
+</script>
+</body>
+</html>

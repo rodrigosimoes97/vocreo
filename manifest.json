@@ -1,0 +1,9 @@
+{
+  "name":"Streetwear ERP",
+  "short_name":"ERP",
+  "start_url":"./index.html",
+  "display":"standalone",
+  "background_color":"#0f172a",
+  "theme_color":"#1F3A5F",
+  "icons":[]
+}
