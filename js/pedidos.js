@@ -671,8 +671,7 @@ function renderStatusPagamentoPedido(pedidoId) {
     }
 
     const statusTotal = pagtosPedido[0].status;
-    const parcPagtas = parcelas.filter(pc => pc.pagamento_id === p.id && pc.data_pagamento);
-    totalPago += parcPagtas.reduce((acc, pc) => acc + pc.valor, 0);
+ 
     const statusColor = {
         'Completo': 'bg-emerald-100 text-emerald-700',
         'Parcial': 'bg-amber-100 text-amber-700',
@@ -680,5 +679,5 @@ function renderStatusPagamentoPedido(pedidoId) {
         'Atrasado': 'bg-red-100 text-red-700'
     };
 
-    return `<span class="px-2 py-1 rounded text-2xs font-bold ${statusColor[statusTotal] || ''}">${statusTotal} | ${totalPago}</span>`;
+    return `<span class="px-2 py-1 rounded text-2xs font-bold ${statusColor[statusTotal] || ''}">${statusTotal} | </span>`;
 }
