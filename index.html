@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOCREO Store | Gestão de Camisetas Oversized & Ecobags</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Fonts: Space Grotesk (display) + Inter (body/data) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Space Grotesk', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        ink: {
+                            800: '#221F2E',
+                            900: '#131218',
+                        },
+                        accent: {
+                            50: '#FFF1ED',
+                            100: '#FFE0D4',
+                            400: '#FF7B54',
+                            500: '#FF5A36',
+                            600: '#E8431E',
+                            700: '#C13416',
+                        },
+                        brand: {
+                            green: '#16A34A',
+                            red: '#E11D48',
+                            yellow: '#F59E0B',
+                            bg: '#F7F5F1'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --surface: #ffffff;
+            --surface-3: #CBD5E1;
+            --border: #E2E8F0;
+            --ink-dim: #64748B;
+            --heat: #3f3f3f;
+            --heat-ink: #ffffff;
+        }
+
+        body {
+            background-color: #F7F5F1;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        .font-display {
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 90, 54, .15);
+            border-color: #FF5A36 !important;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            transition: background-color .15s ease;
+        }
+
+        .icon-btn:hover {
+            background-color: #E2E8F0;
+        }
+
+        .icon-btn.danger:hover {
+            background-color: #FEE2E2;
+        }
+
+        #toast-container {
+            position: fixed;
+            bottom: 5rem;
+            right: 1.5rem;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
+
+        .toast {
+            min-width: 260px;
+            max-width: 360px;
+            padding: .75rem 1rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, .2);
+            color: #fff;
+            font-size: .8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            animation: toast-in .25s ease-out;
+        }
+
+        @keyframes toast-in {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast.success {
+            background-color: #16A34A;
+        }
+
+        .toast.error {
+            background-color: #DC2626;
+        }
+
+        .toast.info {
+            background-color: #221F2E;
+        }
+
+        .empty-row td {
+            padding: 2rem;
+            text-align: center;
+            color: #94A3B8;
+            font-style: italic;
+        }
+
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .card {
+            background-color: #1E293B;
+        }
+
+        /* TAB BAR ACTIVE STATE */
+        .mtab.active {
+            color: #FF5A36 !important;
+        }
+
+        @media (max-width: 767px) {
+            .responsive-table thead {
+                display: none;
+            }
+
+            .responsive-table,
+            .responsive-table tbody,
+            .responsive-table tr,
+            .responsive-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .responsive-table tbody {
+                padding: 12px;
+            }
+
+            .responsive-table tr {
+                background: #fff;
+                border: 1px solid #E2E8F0;
+                border-radius: 14px;
+                margin-bottom: 12px;
+                padding: 4px 14px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+            }
+
+            .responsive-table tr:hover {
+                background: #fff;
+            }
+
+            .responsive-table tr.empty-row {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .responsive-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                padding: 9px 0 !important;
+                text-align: right;
+                border: none !important;
+                border-bottom: 1px solid #F1F5F9 !important;
+            }
+
+            .responsive-table td:last-child {
+                border-bottom: none !important;
+            }
+
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                color: #94A3B8;
+                text-transform: uppercase;
+                font-size: 10px;
+                letter-spacing: .04em;
+                text-align: left;
+                flex-shrink: 0;
+            }
+
+            .responsive-table td.card-title {
+                display: block;
+                text-align: left;
+                font-family: 'Space Grotesk', sans-serif;
+                font-weight: 700;
+                font-size: .95rem;
+                color: #1e293b;
+                padding: 12px 0 10px !important;
+                border-bottom: 2px solid #F1F5F9 !important;
+            }
+
+            .responsive-table td.card-title::before {
+                content: none;
+            }
+
+            .responsive-table td.card-actions {
+                justify-content: flex-end;
+            }
+
+            .responsive-table td.status-timeline {
+                display: block;
+                text-align: left;
+                padding: 10px 0 !important;
+            }
+
+            .responsive-table td.status-timeline::before {
+                display: block;
+                margin-bottom: 8px;
+            }
+        }
+
+        .pagamento-tipo-btn {
+            border-color: #e2e8f0;
+            color: #475569;
+            background: white;
+            cursor: pointer;
+        }
+
+        .pagamento-tipo-btn:hover {
+            border-color: #cbd5e1;
+            background: #f1f5f9;
+        }
+
+        #pgto-tipo[value="PIX"]~div .pagamento-tipo-btn[data-tipo="PIX"],
+        #pgto-tipo[value="CREDITO"]~div .pagamento-tipo-btn[data-tipo="CREDITO"],
+        #pgto-tipo[value="DINHEIRO"]~div .pagamento-tipo-btn[data-tipo="DINHEIRO"] {
+            border-color: #ff5a36;
+            background: #fff5f3;
+            color: #ff5a36;
+        }
+    </style>
+</head>
+
+<body class="h-screen flex flex-col overflow-hidden bg-brand-bg">
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay"
+        class="fixed inset-0 bg-ink-900 z-[200] flex flex-col items-center justify-center text-white space-y-3">
+        <div class="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+        <p class="text-sm font-semibold">Carregando dados do Supabase...</p>
+    </div>
+
+    <!-- MAIN CONTENT AREA (Full Width sem Sidebar) -->
+    <main class="flex-1 flex flex-col overflow-hidden min-w-0 pb-16">
+
+        <!-- HEADER BAR -->
+        <header
+            class="bg-white/90 backdrop-blur-sm border-b border-slate-200 px-4 md:px-8 py-3 md:py-4 flex justify-between items-center shadow-sm sticky top-0 z-20 gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <!-- <div class="p-2 bg-accent-500 rounded-lg text-white shadow-lg shadow-accent-500/30 flex-shrink-0"> -->
+                <img src="logo.jpeg" class="w-10 h-10 rounded-md"></img>
+                <!-- </div> -->
+                <div class="min-w-0">
+                    <h2 id="page-title" class="text-base md:text-xl font-bold text-slate-800 truncate">Dashboard Geral
+                    </h2>
+                    <p class="hidden sm:block text-xs text-slate-500">Visão em tempo real do seu negócio de streetwear
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 md:gap-4 flex-shrink-0">
+                <div id="conn-status"
+                    class="bg-slate-100 px-2.5 md:px-3 py-1.5 rounded-full flex items-center space-x-2 text-2xs md:text-xs font-semibold text-slate-600 border border-slate-200">
+                    <span id="conn-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0"></span>
+                    <span id="conn-text" class="hidden sm:inline">Conectando ao banco...</span>
+                </div>
+                <div class="flex items-center space-x-2 text-sm text-slate-700 font-medium">
+                    <div
+                        class="w-8 h-8 rounded-full bg-ink-800 text-white flex items-center justify-center font-bold flex-shrink-0">
+                        VS
+                    </div>
+                    <span class="hidden md:inline">VOCREO Store</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENT CONTAINERS -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
+
+            <!-- TAB 1: DASHBOARD -->
+            <div id="tab-dashboard" class="tab-content active space-y-6">
+                <!-- KPIs PRINCIPAIS -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div
+                        class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow border-l-4 border-l-accent-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Receita Total</p>
+                        <h3 id="kpi-receita" class="text-2xl font-bold text-ink-800 mt-1">R$ 0,00</h3>
+                        <p id="kpi-receita-var" class="text-xs text-emerald-600 font-medium mt-1"><i
+                                data-lucide="trending-up" class="inline w-3 h-3"></i> vs mês anterior</p>
+                    </div>
+                    <div
+                        class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow border-l-4 border-l-brand-green">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Lucro Líquido</p>
+                        <h3 id="kpi-lucro" class="text-2xl font-bold text-emerald-600 mt-1">R$ 0,00</h3>
+                        <p id="kpi-margem-lucro" class="text-xs text-slate-500 mt-1">Margem líquida: 0%</p>
+                    </div>
+                    <div
+                        class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow border-l-4 border-l-violet-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total de Pedidos</p>
+                        <h3 id="kpi-pedidos" class="text-2xl font-bold text-ink-800 mt-1">0</h3>
+                        <p id="kpi-ticket" class="text-xs text-slate-500 mt-1">Ticket médio: R$ 0,00</p>
+                    </div>
+                    <div
+                        class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow border-l-4 border-l-brand-yellow">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Estoque Total</p>
+                        <h3 id="kpi-estoque" class="text-2xl font-bold text-ink-800 mt-1">0 un</h3>
+                        <p id="kpi-critico" class="text-xs text-red-500 font-semibold mt-1">0 itens críticos</p>
+                    </div>
+                </div>
+
+                <!-- KPIs SECUNDÁRIOS -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="wallet" class="w-5 h-5"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Despesas Totais</p>
+                            <p id="kpi-despesas" class="text-lg font-bold text-slate-800">R$ 0,00</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="package-check" class="w-5 h-5"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Valor em Estoque
+                                (custo)</p>
+                            <p id="kpi-valor-estoque" class="text-lg font-bold text-slate-800">R$ 0,00</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-violet-50 text-violet-500 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Clientes Cadastrados
+                            </p>
+                            <p id="kpi-clientes-total" class="text-lg font-bold text-slate-800">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- META DO MÊS + GRÁFICO DE EVOLUÇÃO -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div
+                        class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <i data-lucide="target" class="w-5 h-5 text-accent-500"></i>
+                            <span>Meta do Mês</span>
+                        </h4>
+                        <div id="dash-meta-widget"></div>
+                        <button onclick="switchTab('metas')"
+                            class="mt-4 w-full text-center text-xs font-semibold text-accent-600 hover:underline">Configurar
+                            meta →</button>
+                    </div>
+                    <div
+                        class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow lg:col-span-2">
+                        <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <i data-lucide="line-chart" class="w-5 h-5 text-brand-green"></i>
+                            <span>Evolução — Receita &amp; Lucro (6 meses)</span>
+                        </h4>
+                        <div class="h-56">
+                            <canvas id="chartEvolucao"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GRÁFICOS DE CATEGORIA/PRODUTO -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div
+                        class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center space-x-2">
+                            <i data-lucide="pie-chart" class="w-5 h-5 text-accent-500"></i>
+                            <span>Vendas por Categoria (R$)</span>
+                        </h4>
+                        <div class="h-64 flex justify-center">
+                            <canvas id="chartCategoria"></canvas>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center space-x-2">
+                            <i data-lucide="bar-chart-2" class="w-5 h-5 text-brand-green"></i>
+                            <span>Volume Vendido por Produto (Unidades)</span>
+                        </h4>
+                        <div class="h-64">
+                            <canvas id="chartProdutos"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TOP PRODUTOS + ALERTA DE ESTOQUE + ÚLTIMOS PEDIDOS -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div
+                        class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <i data-lucide="trophy" class="w-5 h-5 text-brand-yellow"></i>
+                            <span>Top 5 Produtos</span>
+                        </h4>
+                        <div id="dash-top-produtos" class="space-y-3"></div>
+                    </div>
+                    <div
+                        class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-red-500"></i>
+                            <span>Estoque Crítico</span>
+                        </h4>
+                        <div id="dash-alerta-estoque" class="divide-y divide-slate-100"></div>
+                        <button onclick="switchTab('estoque')"
+                            class="mt-3 w-full text-center text-xs font-semibold text-accent-600 hover:underline">Ver
+                            estoque completo →</button>
+                    </div>
+                    <div
+                        class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                        <h4 class="text-base font-bold text-slate-800 p-6 pb-4 flex items-center gap-2">
+                            <i data-lucide="clock" class="w-5 h-5 text-violet-500"></i>
+                            <span>Últimos Pedidos</span>
+                        </h4>
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <tbody id="dash-ultimos-pedidos" class="divide-y divide-slate-100 font-medium"></tbody>
+                        </table>
+                        <button onclick="switchTab('pedidos')"
+                            class="w-full text-center text-xs font-semibold text-accent-600 hover:underline p-3 border-t border-slate-100">Ver
+                            todos os pedidos →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: PEDIDOS -->
+            <div id="tab-pedidos" class="tab-content space-y-4">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                    <h3 class="text-lg font-bold text-slate-800">Lista de Pedidos Registrados</h3>
+                    <button onclick="openSelectClienteModal()"
+                        class="bg-accent-500 hover:bg-accent-600 active:scale-[0.98] text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 shadow shadow-accent-500/20 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Cadastrar Novo Pedido</span>
+                    </button>
+                </div>
+                <div id="grid-pedidos" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <!-- Injetado via JavaScript -->
+                </div>
+            </div>
+
+            <!-- TAB 3: CATÁLOGO (ESTAMPAS) -->
+            <div id="tab-produtos" class="tab-content space-y-4">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">Catálogo de Estampas</h3>
+                        <p class="text-xs text-slate-500">As artes/estampas disponíveis. O preço final do pedido é
+                            calculado somando o custo do material + custo da estampa.</p>
+                    </div>
+                    <button onclick="openEstampaModal()"
+                        class="bg-accent-500 hover:bg-accent-600 active:scale-[0.98] text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 shadow shadow-accent-500/20 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Cadastrar Nova Estampa</span>
+                    </button>
+                </div>
+                <div id="grid-produtos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <!-- Injetado via JS -->
+                </div>
+            </div>
+
+            <!-- TAB 4: ESTOQUE (MATERIAIS) -->
+            <div id="tab-estoque" class="tab-content space-y-4">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">Controle de Estoque de Materiais</h3>
+                        <p class="text-xs text-slate-500">Camisetas e ecobags em branco, por tipo, cor e tamanho. Sem
+                            imagem — o catálogo de estampas é quem tem foto.</p>
+                    </div>
+                    <button onclick="openMaterialModal()"
+                        class="bg-accent-500 hover:bg-accent-600 active:scale-[0.98] text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 shadow shadow-accent-500/20 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Cadastrar Novo Material</span>
+                    </button>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+                    <table class="responsive-table w-full text-left text-xs text-slate-600">
+                        <thead class="bg-ink-800 text-white uppercase text-2xs">
+                            <tr>
+                                <th class="p-3">SKU</th>
+                                <th class="p-3">Tipo</th>
+                                <th class="p-3">Modelo</th>
+                                <th class="p-3">Cor</th>
+                                <th class="p-3">Tamanho</th>
+                                <th class="p-3">Entradas</th>
+                                <th class="p-3">Saídas (Vendas)</th>
+                                <th class="p-3">Saldo Atual</th>
+                                <th class="p-3">Mínimo</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">Sugestão Reposição</th>
+                                <th class="p-3 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-estoque-body" class="divide-y divide-slate-100 font-medium">
+                            <!-- Injetado via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 5: CLIENTES -->
+            <div id="tab-clientes" class="tab-content space-y-4">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                    <h3 class="text-lg font-bold text-slate-800">Base de Clientes & CRM</h3>
+                    <button onclick="openClienteModal()"
+                        class="bg-accent-500 hover:bg-accent-600 active:scale-[0.98] text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 shadow shadow-accent-500/20 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Cadastrar Novo Cliente</span>
+                    </button>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+                    <table class="responsive-table w-full text-left text-xs text-slate-600">
+                        <thead class="bg-ink-800 text-white uppercase text-2xs">
+                            <tr>
+                                <th class="p-3">Cliente</th>
+                                <th class="p-3">Telefone</th>
+                                <th class="p-3">Instagram</th>
+                                <th class="p-3">Cidade</th>
+                                <th class="p-3">Qtd Pedidos</th>
+                                <th class="p-3">Total Gasto</th>
+                                <th class="p-3">Ticket Médio</th>
+                                <th class="p-3">Status VIP</th>
+                                <th class="p-3 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-clientes-body" class="divide-y divide-slate-100 font-medium">
+                            <!-- Injetado via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 6: FINANCEIRO -->
+            <div id="tab-financeiro" class="tab-content space-y-4">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                    <h3 class="text-lg font-bold text-slate-800">Fluxo de Caixa</h3>
+                    <button onclick="openDespesaModal()"
+                        class="bg-red-500 hover:bg-red-600 active:scale-[0.98] text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 shadow shadow-red-500/20 transition">
+                        <i data-lucide="minus-circle" class="w-4 h-4"></i>
+                        <span>Registrar Despesa</span>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Total de Receitas</p>
+                        <p id="fin-receita-total" class="text-lg font-bold text-emerald-600">R$ 0,00</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Total de Despesas</p>
+                        <p id="fin-despesa-total" class="text-lg font-bold text-red-600">R$ 0,00</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Saldo</p>
+                        <p id="fin-saldo-total" class="text-lg font-bold text-slate-800">R$ 0,00</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+                    <table class="responsive-table w-full text-left text-xs text-slate-600">
+                        <thead class="bg-ink-800 text-white uppercase text-2xs">
+                            <tr>
+                                <th class="p-3">Data</th>
+                                <th class="p-3">Tipo</th>
+                                <th class="p-3">Categoria</th>
+                                <th class="p-3">Descrição</th>
+                                <th class="p-3">Valor (R$)</th>
+                                <th class="p-3">Forma Pagamento</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-financeiro-body" class="divide-y divide-slate-100 font-medium">
+                            <!-- Injetado via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 7: CUSTOS -->
+            <div id="tab-custos" class="tab-content space-y-4">
+                <h3 class="text-lg font-bold text-slate-800">Formação de Preço e Custos Direct</h3>
+                <div
+                    class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow space-y-4">
+                    <p class="text-xs text-slate-500">Calculadora automática de Markup, Preço Ideal e Lucro estimado.
+                    </p>
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600">Custo Malha/Tecido (R$)</label>
+                            <input id="calc-malha" type="number" value="22.00" oninput="calcularPreco()"
+                                class="mt-1 w-full border border-slate-300 rounded p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600">Custo Estampa DTF (R$)</label>
+                            <input id="calc-dtf" type="number" value="8.50" oninput="calcularPreco()"
+                                class="mt-1 w-full border border-slate-300 rounded p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600">Etiqueta + Embalagem (R$)</label>
+                            <input id="calc-etiq" type="number" value="2.50" oninput="calcularPreco()"
+                                class="mt-1 w-full border border-slate-300 rounded p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600">Mão de Obra / Costura (R$)</label>
+                            <input id="calc-mao" type="number" value="5.00" oninput="calcularPreco()"
+                                class="mt-1 w-full border border-slate-300 rounded p-2 text-sm">
+                        </div>
+                    </div>
+                    <div class="p-4 bg-ink-800 text-white rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div>
+                            <p class="text-xs text-slate-300">Custo Direto Total</p>
+                            <p id="res-custo-total" class="text-xl font-bold">R$ 38,00</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-300">Preço Sugerido (Markup 135%)</p>
+                            <p id="res-preco-sugerido" class="text-xl font-bold text-accent-500">R$ 89,30</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-300">Lucro Líquido Estimado</p>
+                            <p id="res-lucro-est" class="text-xl font-bold text-emerald-400">R$ 37,00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 8: METAS -->
+            <div id="tab-metas" class="tab-content space-y-4">
+                <h3 class="text-lg font-bold text-slate-800">Acompanhamento de Metas Mensais</h3>
+                <div
+                    class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow space-y-6">
+                    <div>
+                        <div class="flex justify-between text-sm font-semibold mb-1">
+                            <span>Meta de Receita (<span id="meta-titulo-mes">-</span>)</span>
+                            <span id="meta-perc-text">0% Atingido</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+                            <div id="meta-bar" class="bg-brand-green h-4 rounded-full transition-all duration-500"
+                                style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-slate-500 mt-2">
+                            <span>Realizado: <b id="meta-realizado">R$ 0,00</b></span>
+                            <span>Meta: <b id="meta-alvo-receita">R$ 0,00</b></span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm font-semibold mb-1">
+                            <span>Meta de Vendas (nº de pedidos)</span>
+                            <span id="meta-perc-text-vendas">0% Atingido</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+                            <div id="meta-bar-vendas" class="bg-violet-500 h-4 rounded-full transition-all duration-500"
+                                style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-slate-500 mt-2">
+                            <span>Realizado: <b id="meta-realizado-vendas">0 pedido(s)</b></span>
+                            <span>Meta: <b id="meta-alvo-vendas">0 pedido(s)</b></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                    <h4 class="font-bold text-slate-700 mb-3 text-sm">Definir Meta do Mês Atual</h4>
+                    <form id="form-meta" onsubmit="salvarMeta(event)"
+                        class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end text-xs">
+                        <div>
+                            <label class="block font-semibold text-slate-700">Meta de Receita (R$)</label>
+                            <input type="number" step="0.01" min="0" id="input-meta-receita"
+                                class="w-full border rounded p-2 mt-1" placeholder="10000.00">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700">Meta de Vendas (pedidos)</label>
+                            <input type="number" min="0" id="input-meta-vendas" class="w-full border rounded p-2 mt-1"
+                                placeholder="50">
+                        </div>
+                        <button id="btn-salvar-meta" type="submit"
+                            class="bg-brand-green hover:bg-emerald-600 active:scale-[0.98] text-white px-4 py-2 rounded-lg font-semibold transition">Salvar
+                            Meta</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- TAB 9: RELATORIOS -->
+            <div id="tab-relatorios" class="tab-content space-y-4">
+                <h3 class="text-lg font-bold text-slate-800">Relatórios de Desempenho Executivo</h3>
+                <div
+                    class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow space-y-4">
+                    <h4 class="font-bold text-slate-700">Resumo Financeiro Geral</h4>
+                    <div id="relatorio-resumo-container"></div>
+                </div>
+                <div
+                    class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow space-y-4">
+                    <h4 class="font-bold text-slate-700">Resumo por Categoria</h4>
+                    <div id="relatorio-categoria-container"></div>
+                </div>
+                <!-- Inside tab-relatorios or similar -->
+                <div class="space-y-4 p-4">
+                    <h3 class="font-bold text-slate-800">Pagamentos Pendentes / Atrasados</h3>
+                    <div id="relatorio-pagamentos-container" class="bg-white rounded-lg border border-slate-200 p-4">
+                        <!-- Preenchido pela função renderPagamentosPendentes() -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MOBILE BOTTOM TABBAR -->
+    <nav class="mobile-tabbar fixed bottom-0 left-0 right-0 flex items-center justify-around border-t z-40"
+        style="background:var(--surface);border-color:var(--border);height:64px;padding-bottom:env(safe-area-inset-bottom);">
+        <button onclick="switchTab('dashboard')" data-mtab="dashboard"
+            class="mtab active flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg"
+            style="color:var(--ink-dim);"><i data-lucide="layout-dashboard" class="w-5 h-5"></i><span
+                class="text-[10px] font-medium">Início</span></button>
+        <button onclick="switchTab('pedidos')" data-mtab="pedidos"
+            class="mtab flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg" style="color:var(--ink-dim);"><i
+                data-lucide="shopping-bag" class="w-5 h-5"></i><span
+                class="text-[10px] font-medium">Pedidos</span></button>
+        <button onclick="openSelectClienteModal()"
+            class="flex flex-col items-center justify-center rounded-full -mt-6 shadow-lg flex-shrink-0"
+            style="width:52px;height:52px;background:var(--heat);color:var(--heat-ink);"><i data-lucide="plus"
+                class="w-6 h-6"></i></button>
+        <button onclick="switchTab('produtos')" data-mtab="produtos"
+            class="mtab flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg" style="color:var(--ink-dim);"><i
+                data-lucide="package" class="w-5 h-5"></i><span class="text-[10px] font-medium">Catálogo</span></button>
+        <button onclick="toggleMoreMenu()" class="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg"
+            style="color:var(--ink-dim);"><i data-lucide="menu" class="w-5 h-5"></i><span
+                class="text-[10px] font-medium">Mais</span></button>
+    </nav>
+
+    <!-- MOBILE MORE SHEET -->
+    <div id="more-sheet" class="hidden fixed inset-0 z-50 items-end justify-center modal-overlay"
+        onclick="if(event.target===this)toggleMoreMenu()">
+        <div class="w-full card rounded-t-2xl rounded-b-none p-4 pb-8 space-y-1 max-w-lg">
+            <div class="w-10 h-1 rounded-full mx-auto mb-3" style="background:var(--surface-3);"></div>
+            <button onclick="switchTab('estoque');toggleMoreMenu()"
+                class="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10"><i
+                    data-lucide="boxes" class="w-4 h-4"></i>Estoque</button>
+            <button onclick="switchTab('clientes');toggleMoreMenu()"
+                class="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10"><i
+                    data-lucide="users" class="w-4 h-4"></i>Clientes</button>
+            <button onclick="switchTab('financeiro');toggleMoreMenu()"
+                class="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10"><i
+                    data-lucide="wallet" class="w-4 h-4"></i>Financeiro</button>
+            <button onclick="switchTab('custos');toggleMoreMenu()"
+                class="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10"><i
+                    data-lucide="calculator" class="w-4 h-4"></i>Custos & Preço</button>
+            <button onclick="switchTab('metas');toggleMoreMenu()"
+                class="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10"><i
+                    data-lucide="target" class="w-4 h-4"></i>Metas</button>
+            <button onclick="switchTab('relatorios');toggleMoreMenu()"
+                class="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10"><i
+                    data-lucide="bar-chart-3" class="w-4 h-4"></i>Relatórios</button>
+        </div>
+    </div>
+
+    <!-- MODAL SELECIONAR/CRIAR CLIENTE -->
+    <div id="modal-select-cliente" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-xl rounded-2xl p-5 md:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-800">Selecionar Cliente</h3>
+                <button onclick="closeModal('modal-select-cliente')" class="text-slate-400 hover:text-slate-600"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-2">Buscar Cliente Existente</label>
+                    <input type="text" id="cliente-search-input" placeholder="Nome, telefone ou instagram..."
+                        class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-500"
+                        oninput="displayClientesSearch(this.value)">
+                </div>
+
+                <div id="cliente-results-list" class="border rounded-lg max-h-64 overflow-y-auto space-y-2 p-2">
+                    <!-- Lista dinâmica de clientes -->
+                </div>
+
+                <div class="border-t pt-4">
+                    <button type="button" onclick="openClienteModal(); closeModal('modal-select-cliente')"
+                        class="w-full bg-accent-500 hover:bg-accent-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center space-x-2 transition">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        <span>Criar Novo Cliente</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SELECIONAR/CRIAR CLIENTE -->
+    <div id="modal-select-cliente" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-xl rounded-2xl p-5 md:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-800">Selecionar ou Criar Cliente</h3>
+                <button onclick="closeModal('modal-select-cliente')" class="text-slate-400 hover:text-slate-600"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-2">🔍 Buscar Cliente Existente</label>
+                    <input type="text" id="cliente-search-input" placeholder="Digite nome, telefone ou instagram..."
+                        class="w-full border rounded-lg p-2.5 text-sm" oninput="displayClientesSearch(this.value)">
+                </div>
+
+                <div id="cliente-results-list"
+                    class="border rounded-lg max-h-64 overflow-y-auto space-y-2 p-2 bg-slate-50">
+                    <!-- Lista dinâmica de clientes -->
+                </div>
+
+                <div class="border-t pt-4">
+                    <button type="button" onclick="abrirNovoClienteDoModal()"
+                        class="w-full bg-accent-500 hover:bg-accent-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center space-x-2 transition active:scale-[0.98]">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        <span>+ Criar Novo Cliente</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NOVO/EDITAR PEDIDO (MÚLTIPLOS PRODUTOS) -->
+    <div id="modal-novo-pedido" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-2xl rounded-2xl p-5 md:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="modal-pedido-title" class="font-bold text-slate-800">Cadastrar Novo Pedido</h3>
+                <button onclick="closeModal('modal-novo-pedido')" class="text-slate-400 hover:text-slate-600"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-pedido" onsubmit="salvarPedido(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="ped-edit-id" value="">
+                <input type="hidden" id="ped-cliente-id" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700">Nome do Cliente</label>
+                        <input type="text" id="ped-cliente" required class="w-full border rounded p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700">Telefone</label>
+                        <input type="tel" id="ped-telefone" placeholder="(11) 99999-9999"
+                            class="w-full border rounded p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700">Cidade</label>
+                        <input type="text" id="ped-cidade" placeholder="Rio de Janeiro"
+                            class="w-full border rounded p-2 mt-1">
+                    </div>
+                </div>
+
+                <!-- SEÇÃO MÚLTIPLOS ITENS -->
+                <div class="border rounded-xl p-3 bg-slate-50 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label class="font-bold text-slate-800 text-sm">Itens do Pedido</label>
+                        <button type="button" onclick="adicionarLinhaItem()"
+                            class="text-accent-600 font-semibold hover:underline flex items-center gap-1">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>Adicionar Item
+                        </button>
+                    </div>
+                    <p class="text-2xs text-slate-500 -mt-2">Para cada item, escolha a estampa, o tipo de peça, cor e
+                        tamanho. O estoque do material é decrementado automaticamente.</p>
+
+                    <div id="container-itens-pedido" class="space-y-2">
+                        <!-- Linhas de itens adicionadas dinamicamente via JS -->
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center pt-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700">Status do Pedido</label>
+                        <select id="ped-status" class="w-full border rounded p-2 mt-1">
+                            <option selected>Produção</option>
+                            <option>Aguardando</option>
+                            <option>Pronto</option>
+                            <option>Enviado</option>
+                            <option>Entregue</option>
+                        </select>
+                    </div>
+                    <div class="text-right font-bold text-sm text-slate-800 bg-slate-100 p-3 rounded-lg">
+                        Total Geral: <span id="ped-total-preview" class="text-accent-600 text-base">R$ 0,00</span>
+                    </div>
+                </div>
+                <div id="pagamentos-pedido-${pedidoId}" class="mt-4 pt-4 border-t">
+                    <!-- Aqui os pagamentos serão renderizados via JavaScript -->
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('modal-novo-pedido')"
+                        class="px-4 py-2 bg-slate-200 rounded text-slate-700 font-semibold">Cancelar</button>
+                    <button id="btn-salvar-pedido" type="submit"
+                        class="px-4 py-2 bg-brand-green hover:bg-emerald-600 active:scale-[0.98] text-white rounded-lg font-semibold transition">Salvar
+                        Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL NOVO/EDITAR ESTAMPA (CATÁLOGO) -->
+    <div id="modal-produto" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-2xl rounded-2xl p-5 md:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="modal-produto-title" class="font-bold text-slate-800">Cadastrar Nova Estampa</h3>
+                <button onclick="closeModal('modal-produto')" class="text-slate-400 hover:text-slate-600"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-produto" onsubmit="salvarEstampa(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="est-edit-id" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700">SKU</label>
+                        <input type="text" id="est-sku" readonly required
+                            class="w-full border bg-slate-100 text-slate-500 rounded p-2 mt-1 cursor-not-allowed font-mono">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700">Nome da Estampa</label>
+                        <input type="text" id="est-nome" required placeholder="Ex: Tribal Skull"
+                            class="w-full border rounded p-2 mt-1">
+                    </div>
+                </div>
+
+                <p class="text-2xs text-slate-500 bg-slate-50 border rounded p-2">Essa estampa pode ser usada em
+                    qualquer camiseta ou ecobag do estoque na hora de montar o pedido.</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700">Custo da Estampa (R$)</label>
+                        <input type="number" step="0.01" id="est-custo" required value="0"
+                            class="w-full border rounded p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700">Margem de lucro (%)</label>
+                        <input type="number" step="0.01" id="est-markup" required value="40"
+                            class="w-full border rounded p-2 mt-1">
+                    </div>
+                </div>
+                <p class="text-2xs text-slate-400 -mt-1">Preço final do item = (custo do material + custo da estampa) ×
+                    (1 + margem%). Calculado automaticamente no pedido, sem edição manual.</p>
+
+                <div>
+                    <label class="block font-semibold text-slate-700">Foto da Estampa</label>
+                    <div class="flex items-center gap-3 mt-1.5">
+                        <div id="est-foto-upload"
+                            class="flex-shrink-0 w-20 h-20 rounded-lg border-2 border-dashed border-slate-300 hover:border-accent-500 transition cursor-pointer flex items-center justify-center overflow-hidden bg-slate-50"
+                            onclick="document.getElementById('est-foto-input').click()">
+                            <input type="file" id="est-foto-input" class="hidden" accept="image/*"
+                                onchange="previewFotoEstampa(event)">
+                            <i data-lucide="image-plus" class="w-6 h-6 text-slate-400" id="est-foto-icon"></i>
+                            <img id="est-foto-preview" class="hidden w-full h-full object-cover" src="" alt="estampa">
+                        </div>
+                        <input type="hidden" id="est-foto-url" value="">
+                        <p class="text-2xs text-slate-500 leading-snug">Imagem da arte/estampa (opcional, até 5MB).
+                            Somente o catálogo tem upload de imagem.</p>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('modal-produto')"
+                        class="px-4 py-2 bg-slate-200 rounded text-slate-700 font-semibold">Cancelar</button>
+                    <button id="btn-salvar-produto" type="submit"
+                        class="px-4 py-2 bg-brand-green hover:bg-emerald-600 active:scale-[0.98] text-white rounded-lg font-semibold transition">Salvar
+                        Estampa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL NOVO/EDITAR MATERIAL (ESTOQUE) -->
+    <div id="modal-material" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-lg rounded-2xl p-5 md:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="modal-material-title" class="font-bold text-slate-800">Cadastrar Novo Material</h3>
+                <button onclick="closeModal('modal-material')" class="text-slate-400 hover:text-slate-600"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-material" onsubmit="salvarMaterial(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="mat-edit-id" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700">SKU</label>
+                        <input type="text" id="mat-sku" readonly required
+                            class="w-full border bg-slate-100 text-slate-500 rounded p-2 mt-1 cursor-not-allowed font-mono">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700">Tipo</label>
+                        <select id="mat-tipo" onchange="onChangeTipoMaterial()" class="w-full border rounded p-2 mt-1">
+                            <option>Camiseta</option>
+                            <option>Ecobag</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="mat-modelo-wrap">
+                    <label class="block font-semibold text-slate-700">Modelo</label>
+                    <input type="text" id="mat-modelo" placeholder="Oversized" value="Oversized"
+                        oninput="atualizarSkuMaterial()" class="w-full border rounded p-2 mt-1">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700">Cor</label>
+                        <input type="text" id="mat-cor" required placeholder="Preta" oninput="atualizarSkuMaterial()"
+                            class="w-full border rounded p-2 mt-1">
+                    </div>
+                    <div id="mat-tamanho-wrap">
+                        <label class="block font-semibold text-slate-700">Tamanho</label>
+                        <select id="mat-tamanho" onchange="atualizarSkuMaterial()"
+                            class="w-full border rounded p-2 mt-1">
+                            <option>P</option>
+                            <option selected>M</option>
+                            <option>G</option>
+                            <option>GG</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700">Custo da Peça em Branco (R$)</label>
+                    <input type="number" step="0.01" id="mat-custo" required value="0"
+                        class="w-full border rounded p-2 mt-1">
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700">Entradas</label>
+                        <input type="number" id="mat-entradas" value="0" min="0" class="w-full border rounded p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700">Saldo Atual</label>
+                        <input type="number" id="mat-estoque" value="0" min="0" class="w-full border rounded p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700">Mínimo</label>
+                        <input type="number" id="mat-min" value="3" min="0" class="w-full border rounded p-2 mt-1">
+                    </div>
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('modal-material')"
+                        class="px-4 py-2 bg-slate-200 rounded text-slate-700 font-semibold">Cancelar</button>
+                    <button id="btn-salvar-material" type="submit"
+                        class="px-4 py-2 bg-brand-green hover:bg-emerald-600 active:scale-[0.98] text-white rounded-lg font-semibold transition">Salvar
+                        Material</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- MODAL NOVO/EDITAR CLIENTE -->
+    <div id="modal-cliente" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-lg rounded-2xl p-5 md:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="modal-cliente-title" class="font-bold text-slate-800">Cadastrar Novo Cliente</h3>
+                <button onclick="closeModal('modal-cliente')" class="text-slate-400 hover:text-slate-600"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-cliente" onsubmit="salvarCliente(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="cli-edit-id" value="">
+                <div>
+                    <label class="block font-semibold text-slate-700">Nome do Cliente</label>
+                    <input type="text" id="cli-nome" required class="w-full border rounded p-2 mt-1">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700">Telefone</label>
+                        <input type="text" id="cli-telefone" placeholder="(11) 99999-9999"
+                            class="w-full border rounded p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700">Instagram</label>
+                        <input type="text" id="cli-instagram" placeholder="@usuario"
+                            class="w-full border rounded p-2 mt-1">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700">Cidade</label>
+                    <input type="text" id="cli-cidade" placeholder="Rio de Janeiro"
+                        class="w-full border rounded p-2 mt-1">
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('modal-cliente')"
+                        class="px-4 py-2 bg-slate-200 rounded text-slate-700 font-semibold">Cancelar</button>
+                    <button id="btn-salvar-cliente" type="submit"
+                        class="px-4 py-2 bg-brand-green hover:bg-emerald-600 active:scale-[0.98] text-white rounded-lg font-semibold transition">Salvar
+                        Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL NOVA DESPESA -->
+    <div id="modal-despesa" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl p-5 md:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-800">Registrar Nova Despesa</h3>
+                <button onclick="closeModal('modal-despesa')" class="text-slate-400 hover:text-slate-600"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-despesa" onsubmit="salvarDespesa(event)" class="space-y-3 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700">Data</label>
+                        <input type="date" id="desp-data" required class="w-full border rounded p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700">Categoria</label>
+                        <select id="desp-categoria" class="w-full border rounded p-2 mt-1">
+                            <option>Insumos</option>
+                            <option>Estampas/DTF</option>
+                            <option>Embalagem</option>
+                            <option>Frete</option>
+                            <option>Marketing</option>
+                            <option>Taxas/Plataforma</option>
+                            <option>Aluguel</option>
+                            <option>Outros</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700">Descrição</label>
+                    <input type="text" id="desp-descricao" required placeholder="Ex: Compra de malha para produção"
+                        class="w-full border rounded p-2 mt-1">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700">Valor (R$)</label>
+                        <input type="number" step="0.01" min="0" id="desp-valor" required
+                            class="w-full border rounded p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700">Forma de Pagamento</label>
+                        <select id="desp-forma" class="w-full border rounded p-2 mt-1">
+                            <option>PIX</option>
+                            <option>Cartão</option>
+                            <option>Dinheiro</option>
+                            <option>Boleto</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('modal-despesa')"
+                        class="px-4 py-2 bg-slate-200 rounded text-slate-700 font-semibold">Cancelar</button>
+                    <button id="btn-salvar-despesa" type="submit"
+                        class="px-4 py-2 bg-red-500 hover:bg-red-600 active:scale-[0.98] text-white rounded-lg font-semibold transition">Salvar
+                        Despesa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
+
+    <!-- ================= MODAL DE PAGAMENTO ================= -->
+    <div id="modal-pagamento" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h2 id="modal-pagamento-title" class="text-lg font-bold text-slate-800">Registrar Novo Pagamento</h2>
+                <button onclick="closeModal('modal-pagamento')" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="form-pagamento" onsubmit="salvarPagamento(event)" class="space-y-4">
+                <input type="hidden" id="pgto-edit-id">
+                <input type="hidden" id="pgto-pedido-id">
+
+                <!-- Info do Pedido -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                    <p id="pgto-pedido-info" class="text-xs font-semibold text-slate-700"></p>
+                    <p id="pgto-falta-pagar" class="text-xs text-slate-500 mt-1"></p>
+                </div>
+
+                <!-- Tipo de Pagamento -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-2">Tipo de Pagamento</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button"
+                            class="pagamento-tipo-btn py-2 px-3 rounded-lg border-2 text-xs font-bold transition"
+                            onclick="document.getElementById('pgto-tipo').value='PIX'; onChangeTipoPagamento()"
+                            data-tipo="PIX">
+                            📱 PIX
+                        </button>
+                        <button type="button"
+                            class="pagamento-tipo-btn py-2 px-3 rounded-lg border-2 text-xs font-bold transition"
+                            onclick="document.getElementById('pgto-tipo').value='CREDITO'; onChangeTipoPagamento()"
+                            data-tipo="CREDITO">
+                            💳 Crédito
+                        </button>
+                        <button type="button"
+                            class="pagamento-tipo-btn py-2 px-3 rounded-lg border-2 text-xs font-bold transition"
+                            onclick="document.getElementById('pgto-tipo').value='DINHEIRO'; onChangeTipoPagamento()"
+                            data-tipo="DINHEIRO">
+                            💵 Dinheiro
+                        </button>
+                    </div>
+                    <input type="hidden" id="pgto-tipo" value="PIX">
+                </div>
+
+                <!-- Valor Total -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Valor Total</label>
+                    <input type="number" id="pgto-valor" step="0.01" min="0" required
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent-500"
+                        oninput="atualizarParcelasPagamento(); atualizarSinalPagamento()">
+                </div>
+
+                <!-- OPÇÃO: Parcelas (para Crédito) -->
+                <div id="pgto-parcelas-div" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-700 mb-2">Quantas Parcelas?</label>
+                    <select id="pgto-qtd-parcelas" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        onchange="atualizarParcelasPagamento()" required>
+                        <option value="1">1x</option>
+                        <option value="2">2x</option>
+                        <option value="3" selected>3x</option>
+                        <option value="6">6x</option>
+                        <option value="12">12x</option>
+                    </select>
+                    <div id="pgto-parcelas-preview" class="mt-2"></div>
+                </div>
+
+                <!-- OPÇÃO: Sinal (para PIX/Dinheiro) -->
+                <div id="pgto-sinais-div" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-700 mb-2">Valor do Sinal (Entrada)</label>
+                    <p class="text-2xs text-slate-500 mb-2">Deixe 0 se for pagar tudo agora, ou configure o valor de
+                        entrada</p>
+                    <input type="number" id="pgto-sinal" step="0.01" min="0" value="0"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent-500"
+                        oninput="atualizarSinalPagamento()">
+                    <div id="pgto-sinal-preview" class="mt-2"></div>
+                </div>
+
+                <!-- Observações -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Observações (opcional)</label>
+                    <textarea id="pgto-observacoes" rows="2"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent-500"
+                        placeholder="Ex: Confirmar transferência"></textarea>
+                </div>
+
+                <!-- Botões -->
+                <div class="flex gap-2 justify-end pt-4 border-t">
+                    <button type="button" onclick="closeModal('modal-pagamento')"
+                        class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-bold text-slate-600 hover:bg-slate-50">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-salvar-pagamento"
+                        class="px-4 py-2 rounded-lg bg-accent-500 text-white text-sm font-bold hover:bg-accent-600">
+                        Registrar Pagamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL DE REGISTRAR PARCELA COMO PAGA ================= -->
+    <div id="modal-registrar-parcela" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-slate-800">Registrar Pagamento de Parcela</h2>
+                <button onclick="closeModal('modal-registrar-parcela')" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="form-registrar-parcela" onsubmit="confirmarRegistroParcela(event)" class="space-y-4">
+                <input type="hidden" id="regparc-parcela-id">
+
+                <!-- Info da Parcela -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1">
+                    <p class="text-xs text-slate-500">
+                        <span id="regparc-parcela-numero" class="font-bold text-slate-700"></span>
+                    </p>
+                    <p class="text-sm font-bold text-accent-600">
+                        Valor: <span id="regparc-parcela-valor"></span>
+                    </p>
+                    <p class="text-xs text-slate-500">
+                        Vencimento: <span id="regparc-parcela-vencimento" class="font-semibold"></span>
+                    </p>
+                </div>
+
+                <!-- Data de Pagamento -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Data do Pagamento</label>
+                    <input type="date" id="regparc-data-pagamento" required
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent-500">
+                </div>
+
+                <!-- Forma de Pagamento (display apenas) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Forma de Pagamento</label>
+                    <select id="regparc-forma" disabled
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-50">
+                        <option value="PIX">📱 PIX</option>
+                        <option value="CREDITO">💳 Crédito</option>
+                        <option value="DINHEIRO">💵 Dinheiro</option>
+                    </select>
+                </div>
+
+                <!-- Observações -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Observações (opcional)</label>
+                    <textarea id="regparc-observacoes" rows="2" placeholder="Ex: Conferência realizada"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent-500"></textarea>
+                </div>
+
+                <!-- Botões -->
+                <div class="flex gap-2 justify-end pt-4 border-t">
+                    <button type="button" onclick="closeModal('modal-registrar-parcela')"
+                        class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-bold text-slate-600 hover:bg-slate-50">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-confirmar-parcela"
+                        class="px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600">
+                        ✓ Confirmar Pagamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script src="js/core.js"></script>
+    <script src="js/pagamentos.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/pedidos.js"></script>
+    <script src="js/produtos.js"></script>
+    <script src="js/estoque.js"></script>
+    <script src="js/clientes.js"></script>
+    <script src="js/financeiro.js"></script>
+    <script src="js/custos.js"></script>
+    <script src="js/metas.js"></script>
+    <script src="js/relatorios.js"></script>
+</body>
