@@ -1,12 +1,14 @@
+// ================= STATUS DE PEDIDO (fonte única, usada em toda a tela de pedidos) =================
+const STATUS_PEDIDO = ['Produção', 'Aguardando', 'Pronto', 'Enviado', 'Entregue'];
+const STATUS_ICONS = {
+    'Produção': 'hammer',
+    'Aguardando': 'clock',
+    'Pronto': 'package-check',
+    'Enviado': 'truck',
+    'Entregue': 'check-check'
+};
+
 function renderTimelineCompactaStatus(statusAtual) {
-    const STATUS_PEDIDO = ['Produção', 'Aguardando', 'Pronto', 'Enviado', 'Entregue'];
-    const STATUS_ICONS = {
-        'Produção': 'hammer',
-        'Aguardando': 'clock',
-        'Pronto': 'package-check',
-        'Enviado': 'truck',
-        'Entregue': 'check-check'
-    };
     const STATUS_COLORS = {
         'Produção': 'bg-amber-100 text-amber-600',
         'Aguardando': 'bg-blue-100 text-blue-600',
@@ -35,15 +37,6 @@ function renderTimelineCompactaStatus(statusAtual) {
             `;
     return html;
 }
-
-const STATUS_PEDIDO = ['Produção', 'Aguardando', 'Pronto', 'Enviado', 'Entregue'];
-const STATUS_ICONS = {
-    'Produção': 'hammer',
-    'Aguardando': 'clock',
-    'Pronto': 'package-check',
-    'Enviado': 'truck',
-    'Entregue': 'check-check'
-};
 
 function renderTimelineStatus(pedidoId, statusAtual) {
     const idxAtual = STATUS_PEDIDO.indexOf(statusAtual);
@@ -94,11 +87,29 @@ async function avancarStatusPedido(id, novoStatus) {
 function renderPedidos() {
     const grid = document.getElementById('grid-pedidos');
     grid.innerHTML = '';
+
+    const searchInput = document.getElementById('pedidos-search-input');
+    const statusFilter = document.getElementById('pedidos-status-filter');
+    const termoBusca = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    const statusSelecionado = statusFilter ? statusFilter.value : '';
+
+    const pedidosFiltrados = pedidos.filter(p => {
+        const passaBusca = !termoBusca || (p.cliente || '').toLowerCase().includes(termoBusca);
+        const passaStatus = !statusSelecionado || p.status === statusSelecionado;
+        return passaBusca && passaStatus;
+    });
+
     if (pedidos.length === 0) {
         grid.innerHTML = '<div class="col-span-full text-center text-slate-400 text-xs py-10 bg-white rounded-2xl border border-dashed border-slate-200">Nenhum pedido cadastrado ainda. Clique em "+" para começar.</div>';
         return;
     }
-    pedidos.forEach(p => {
+
+    if (pedidosFiltrados.length === 0) {
+        grid.innerHTML = '<div class="col-span-full text-center text-slate-400 text-xs py-10 bg-white rounded-2xl border border-dashed border-slate-200">Nenhum pedido encontrado com esse filtro.</div>';
+        return;
+    }
+
+    pedidosFiltrados.forEach(p => {
         const statusBg = p.status === 'Entregue' ? 'bg-emerald-100 text-emerald-800' : p.status === 'Produção' ? 'bg-amber-100 text-amber-800' : 'bg-violet-100 text-violet-700';
 
         const itens = p.itens || [];
@@ -118,8 +129,10 @@ function renderPedidos() {
 
         const resumoProdutos = itens.map(i => `${i.qtd}x ${i.produto_nome} (${i.tamanho})`).join(', ') || 'Nenhum item';
 
+        const bordaPagamento = getBordaCardPedido(p.id);
+
         grid.innerHTML += `
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-2 hover:shadow-md transition text-xs">
+                    <div class="bg-white rounded-2xl border-2 ${bordaPagamento} shadow-sm p-4 flex flex-col gap-2 hover:shadow-md transition text-xs">
                         <div class="flex items-start justify-between gap-2">
                             <div>
                                 <p class="font-bold text-slate-800 text-sm">#${p.id} — ${p.cliente}</p>
@@ -142,13 +155,9 @@ function renderPedidos() {
                             ${renderTimelineStatus(p.id, p.status)}
                         </div>
 
-                        <tr class="hover:bg-slate-50">                           
-                            <!-- ADICIONE ISTO: Coluna de Pagamento -->
-                            <td class="p-3">
-                                ${renderStatusPagamentoPedido(p.id)}
-                            </td>
-                            
-                        </tr>
+                        <div class="pt-1">
+                            ${renderStatusPagamentoPedido(p.id)}
+                        </div>
 
                         <div class="flex items-center justify-end gap-1 pt-2 mt-1 border-t border-slate-100">
                             <button onclick="openPedidoModal(${p.id})" class="icon-btn text-accent-600" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
@@ -332,13 +341,29 @@ function atualizarInfoCustoItem(itemDiv) {
     const margemPct = estampa && estampa.margem_pct != null ? estampa.margem_pct : MARGEM_PADRAO_SEM_ESTAMPA;
     const precoFinal = custoTotal * (1 + margemPct / 100);
 
+    // Remove alerta de estoque anterior (se houver) antes de recalcular
+    const alertaAnterior = itemDiv.querySelector('.item-alerta-estoque');
+    if (alertaAnterior) alertaAnterior.remove();
+
     if (!material) {
         infoEl.innerText = 'Sem estoque cadastrado para essa combinação de cor/tamanho.';
         infoEl.className = 'item-custo-info text-2xs text-red-500 truncate';
     } else {
-        const saldoTxt = material.estoque <= material.min ? ` · ⚠️ saldo baixo (${material.estoque} un)` : ` · saldo: ${material.estoque} un`;
+        const semEstoque = material.estoque <= 0;
+        const saldoBaixo = !semEstoque && material.estoque <= material.min;
+        const saldoTxt = semEstoque ? ` · 🚫 sem estoque` : (saldoBaixo ? ` · ⚠️ saldo baixo (${material.estoque} un)` : ` · saldo: ${material.estoque} un`);
         infoEl.innerText = `Custo: R$ ${custoTotal.toFixed(2)} (material R$ ${custoMaterial.toFixed(2)} + estampa R$ ${custoEstampa.toFixed(2)}) · margem ${margemPct}%${saldoTxt}`;
         infoEl.className = 'item-custo-info text-2xs text-slate-500 truncate';
+
+        // Alerta visual destacado (banner), não só o texto discreto acima
+        if (semEstoque || saldoBaixo) {
+            const alertaDiv = document.createElement('div');
+            alertaDiv.className = `item-alerta-estoque text-2xs font-bold rounded px-2 py-1 mt-1 ${semEstoque ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`;
+            alertaDiv.innerText = semEstoque
+                ? `🚫 Estoque zerado para "${material.tipo} ${material.cor} ${material.tamanho}". Reponha antes de vender.`
+                : `⚠️ Estoque baixo: só ${material.estoque} un disponível (mínimo: ${material.min}).`;
+            itemDiv.querySelector('.grid').insertAdjacentElement('afterend', alertaDiv);
+        }
     }
 
     itemDiv.querySelector('.item-preco').value = precoFinal.toFixed(2);
@@ -664,55 +689,93 @@ function abrirNovoClienteDoModal() {
     openClienteModal();
 }
 
-function renderStatusPagamentoPedido(pedidoId) {
+// ================= CÁLCULO CENTRAL DE STATUS DE PAGAMENTO =================
+// Usado tanto pelo card (badge + barra + borda) quanto por outras telas.
+function getInfoPagamentoPedido(pedidoId) {
     const pedido = pedidos.find(p => p.id === pedidoId);
     const pagtosPedido = pagamentos.filter(p => p.pedido_id === pedidoId);
+    const totalPedido = pedido ? pedido.total : 0;
 
     if (pagtosPedido.length === 0) {
-        const totalPedido = pedido ? pedido.total : 0;
-        return `
-            <div class="flex items-center justify-between gap-2">
-                <span class="px-2 py-1 rounded text-2xs font-bold bg-slate-100 text-slate-600">Sem pagamento</span>
-                ${totalPedido > 0 ? `<span class="text-2xs font-bold text-amber-600">Falta: ${fmtMoeda(totalPedido)}</span>` : ''}
-            </div>
-        `;
+        return {
+            temPagamento: false,
+            totalPedido,
+            totalPago: 0,
+            faltaPagar: totalPedido,
+            percentual: 0,
+            status: 'Sem pagamento',
+            atrasado: false
+        };
     }
 
     // Soma tudo que já foi efetivamente pago (todas as parcelas pagas de todos os pagamentos do pedido)
     let totalPago = 0;
-    let totalRegistrado = 0;
     pagtosPedido.forEach(pgto => {
-        totalRegistrado += pgto.valor_total;
         const parcPagto = parcelas.filter(pc => pc.pagamento_id === pgto.id);
         totalPago += parcPagto
             .filter(pc => pc.data_pagamento)
             .reduce((acc, pc) => acc + pc.valor, 0);
     });
 
-    // Falta pagar é sempre relativo ao total do pedido (não só ao valor registrado em pagamentos)
-    const totalPedido = pedido ? pedido.total : totalRegistrado;
     const faltaPagar = Math.max(0, totalPedido - totalPago);
+    const percentual = totalPedido > 0 ? Math.min(100, (totalPago / totalPedido) * 100) : 0;
+
+    // Verifica se existe parcela pendente vencida (atrasada) em qualquer pagamento do pedido
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const atrasado = pagtosPedido.some(pgto =>
+        parcelas.some(pc =>
+            pc.pagamento_id === pgto.id &&
+            !pc.data_pagamento &&
+            new Date(pc.data_vencimento) < hoje
+        )
+    );
 
     // Status "consolidado": se ainda falta algo, não é Completo mesmo que o status salvo diga isso
-    let statusTotal = pagtosPedido[0].status;
-    if (faltaPagar > 0.009 && statusTotal === 'Completo') {
-        statusTotal = 'Parcial';
+    let status = pagtosPedido[0].status;
+    if (faltaPagar > 0.009 && status === 'Completo') {
+        status = 'Parcial';
     }
+    if (atrasado && faltaPagar > 0.009) {
+        status = 'Atrasado';
+    }
+
+    return { temPagamento: true, totalPedido, totalPago, faltaPagar, percentual, status, atrasado };
+}
+
+// Retorna a classe de borda do card conforme urgência do pagamento
+function getBordaCardPedido(pedidoId) {
+    const info = getInfoPagamentoPedido(pedidoId);
+    if (info.atrasado && info.faltaPagar > 0.009) return 'border-red-300';
+    if (info.faltaPagar > 0.009) return 'border-amber-300';
+    return 'border-slate-200';
+}
+
+function renderStatusPagamentoPedido(pedidoId) {
+    const info = getInfoPagamentoPedido(pedidoId);
 
     const statusColor = {
         'Completo': 'bg-emerald-100 text-emerald-700',
         'Parcial': 'bg-amber-100 text-amber-700',
         'Pendente': 'bg-slate-100 text-slate-700',
-        'Atrasado': 'bg-red-100 text-red-700'
+        'Atrasado': 'bg-red-100 text-red-700',
+        'Sem pagamento': 'bg-slate-100 text-slate-600'
     };
 
+    const barraCor = info.atrasado ? 'bg-red-500' : (info.faltaPagar > 0.009 ? 'bg-amber-500' : 'bg-emerald-500');
+
     return `
-        <div class="flex items-center justify-between gap-2">
-            <span class="px-2 py-1 rounded text-2xs font-bold ${statusColor[statusTotal] || ''}">${statusTotal}</span>
-            ${faltaPagar > 0.009
-                ? `<span class="text-2xs font-bold text-amber-600">Falta: ${fmtMoeda(faltaPagar)}</span>`
-                : `<span class="text-2xs font-bold text-emerald-600">Pago ✓</span>`
-            }
+        <div class="space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+                <span class="px-2 py-1 rounded text-2xs font-bold ${statusColor[info.status] || ''}">${info.status}</span>
+                ${info.faltaPagar > 0.009
+                    ? `<span class="text-2xs font-bold ${info.atrasado ? 'text-red-600' : 'text-amber-600'}">Falta: ${fmtMoeda(info.faltaPagar)}</span>`
+                    : `<span class="text-2xs font-bold text-emerald-600">Pago ✓</span>`
+                }
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                <div class="${barraCor} h-1.5 rounded-full transition-all" style="width:${info.percentual}%"></div>
+            </div>
         </div>
     `;
 }

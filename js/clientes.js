@@ -5,12 +5,35 @@
                 tbody.innerHTML = '<tr class="empty-row"><td colspan="9">Nenhum cliente cadastrado ainda.</td></tr>';
                 return;
             }
-            clientes.forEach(c => {
-                const pedidosCliente = pedidos.filter(p => p.cliente === c.nome);
+
+            const searchInput = document.getElementById('clientes-search-input');
+            const vipFilter = document.getElementById('clientes-vip-filter');
+            const termoBusca = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            const vipSelecionado = vipFilter ? vipFilter.value : '';
+
+            // Pré-calcula totais de todos os clientes (necessário para poder filtrar por VIP)
+            const clientesComDados = clientes.map(c => {
+                const pedidosCliente = pedidosDoCliente(c);
                 const totalGasto = pedidosCliente.reduce((acc, p) => acc + p.total, 0);
                 const qtdPedidos = pedidosCliente.length;
                 const ticket = qtdPedidos > 0 ? totalGasto / qtdPedidos : 0;
                 const isVip = totalGasto > 200;
+                return { c, totalGasto, qtdPedidos, ticket, isVip };
+            });
+
+            const clientesFiltrados = clientesComDados.filter(({ c, isVip }) => {
+                const passaBusca = !termoBusca || [c.nome, c.telefone, c.instagram, c.cidade]
+                    .some(campo => (campo || '').toLowerCase().includes(termoBusca));
+                const passaVip = !vipSelecionado || (vipSelecionado === 'vip' ? isVip : !isVip);
+                return passaBusca && passaVip;
+            });
+
+            if (clientesFiltrados.length === 0) {
+                tbody.innerHTML = '<tr class="empty-row"><td colspan="9">Nenhum cliente encontrado com esse filtro.</td></tr>';
+                return;
+            }
+
+            clientesFiltrados.forEach(({ c, totalGasto, qtdPedidos, ticket, isVip }) => {
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50">
                         <td class="p-3 font-semibold text-slate-800">${c.nome}</td>

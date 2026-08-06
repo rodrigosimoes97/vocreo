@@ -167,7 +167,8 @@ function renderAll() {
         ['renderFinanceiro', renderFinanceiro],
         ['renderMetas', renderMetas],
         ['renderRelatorios', renderRelatorios],
-        ['renderPagamentosPendentes', renderPagamentosPendentes],  // ← ADICIONE ESTA LINHA
+        ['renderPagamentosPendentes-relatorios', () => renderPagamentosPendentes('relatorio-pagamentos-container')],
+        ['renderPagamentosPendentes-dashboard', () => renderPagamentosPendentes('dash-pagamentos-pendentes', 3)],
         ['renderCharts', renderCharts]
     ];
     for (const [nome, fn] of steps) {
@@ -189,6 +190,23 @@ function inicioFimMes(date) {
     const ini = new Date(date.getFullYear(), date.getMonth(), 1);
     const fim = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
     return { ini, fim };
+}
+
+// Normaliza nomes para comparação (evita bugs por espaço extra, maiúscula/minúscula, acentos)
+// NOTA: o ideal seria ter pedidos.cliente_id referenciando clientes.id no banco.
+// Hoje a tabela `pedidos` só guarda o nome do cliente como texto (ver bd.md), então
+// essa normalização é a forma mais segura de "casar" pedido <-> cliente sem migrar o schema.
+function normalizarNome(nome) {
+    return (nome || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+// Retorna todos os pedidos de um cliente, casando por nome normalizado
+function pedidosDoCliente(cliente) {
+    const nomeNorm = normalizarNome(cliente.nome);
+    return pedidos.filter(p => normalizarNome(p.cliente) === nomeNorm);
 }
 
 function parseDataPedido(dataStr) {

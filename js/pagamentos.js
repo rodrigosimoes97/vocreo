@@ -435,16 +435,32 @@ async function deletePagamento(pagamentoId) {
 
 // ================= RELATÓRIO DE PAGAMENTOS PENDENTES =================
 
-function renderPagamentosPendentes() {
-    const container = document.getElementById('relatorio-pagamentos-container');
+// containerId: onde renderizar. limite: corta a lista (usado no card resumido do dashboard).
+// Ordena por urgência (atrasados primeiro, depois por dias de atraso desc) para que, ao usar
+// limite, sempre apareçam os casos mais críticos primeiro.
+function renderPagamentosPendentes(containerId = 'relatorio-pagamentos-container', limite = null) {
+    const container = document.getElementById(containerId);
     if (!container) return;
 
-    const pagtosPendentes = pagamentos.filter(p => p.status !== 'Completo');
+    let pagtosPendentes = pagamentos.filter(p => p.status !== 'Completo');
 
     if (pagtosPendentes.length === 0) {
         container.innerHTML = '<p class="text-xs text-slate-400 italic py-4">Sem pagamentos pendentes! 🎉</p>';
         return;
     }
+
+    // Calcula dias de atraso de cada um para poder ordenar por urgência
+    const comAtraso = pagtosPendentes.map(pgto => {
+        const parcelasNaoPagas = parcelas.filter(p => p.pagamento_id === pgto.id && !p.data_pagamento);
+        const proximaParc = parcelasNaoPagas[0];
+        const diasAtraso = proximaParc
+            ? Math.max(0, Math.floor((new Date() - new Date(proximaParc.data_vencimento)) / (1000 * 60 * 60 * 24)))
+            : 0;
+        return { pgto, diasAtraso };
+    }).sort((a, b) => b.diasAtraso - a.diasAtraso);
+
+    pagtosPendentes = comAtraso.map(x => x.pgto);
+    if (limite) pagtosPendentes = pagtosPendentes.slice(0, limite);
 
     let html = '<div class="space-y-2">';
 

@@ -66,6 +66,19 @@
             document.getElementById('kpi-valor-estoque').innerText = fmtMoeda(valorEstoqueCusto);
             document.getElementById('kpi-clientes-total').innerText = clientes.length;
 
+            // ---- Recebido (caixa) x A Receber ----
+            // Soma pedido a pedido usando a mesma lógica do card (getInfoPagamentoPedido),
+            // garantindo que o dashboard bata exatamente com o que aparece em cada pedido.
+            let totalRecebido = 0;
+            let totalAReceber = 0;
+            pedidos.forEach(p => {
+                const info = getInfoPagamentoPedido(p.id);
+                totalRecebido += info.totalPago;
+                totalAReceber += info.faltaPagar;
+            });
+            document.getElementById('kpi-recebido').innerText = fmtMoeda(totalRecebido);
+            document.getElementById('kpi-a-receber').innerText = fmtMoeda(totalAReceber);
+
             renderMetaDashboardWidget(receitaMesAtual);
             renderTopProdutos();
             renderAlertaEstoque();
@@ -159,15 +172,21 @@
                 return;
             }
             const statusBg = s => s === 'Entregue' ? 'bg-emerald-100 text-emerald-800' : s === 'Produção' ? 'bg-amber-100 text-amber-800' : 'bg-violet-100 text-violet-700';
-            el.innerHTML = ultimos.map(p => `
+            el.innerHTML = ultimos.map(p => {
+                const infoPgto = getInfoPagamentoPedido(p.id);
+                const faltaHtml = infoPgto.faltaPagar > 0.009
+                    ? `<span class="text-2xs font-bold ${infoPgto.atrasado ? 'text-red-600' : 'text-amber-600'}">Falta ${fmtMoeda(infoPgto.faltaPagar)}</span>`
+                    : `<span class="text-2xs font-bold text-emerald-600">Pago ✓</span>`;
+                return `
                 <tr class="hover:bg-slate-50 cursor-pointer" onclick="switchTab('pedidos')">
                     <td class="p-2.5 font-semibold text-slate-700">${p.cliente}</td>
                     <td class="p-2.5 text-slate-500">${p.data.split('T')[0].split('-').reverse().join('/')}</td>
                     <td class="p-2.5 font-bold text-slate-800">${fmtMoeda(p.total)}</td>
                     <td class="p-2.5">${renderTimelineCompactaStatus(p.status)}</td>
-                    
+                    <td class="p-2.5">${faltaHtml}</td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
         // <td class="p-2.5"><span class="px-2 py-0.5 rounded-full text-2xs font-bold ${statusBg(p.status)}">${p.status}</span></td>
 

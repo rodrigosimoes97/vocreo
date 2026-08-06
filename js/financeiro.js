@@ -36,7 +36,6 @@
                 const isReceita = m.tipo === 'Receita';
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50">
-                        <td class="p-3 card-title">${m.data.split('T')[0].split("-").reverse().join("/")} — ${m.descricao}</td>
                         <td class="p-3" data-label="Data">${m.data.split('T')[0].split("-").reverse().join("/")}</td>
                         <td class="p-3" data-label="Tipo"><span class="px-2 py-0.5 rounded text-2xs font-bold ${isReceita ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">${m.tipo}</span></td>
                         <td class="p-3" data-label="Categoria">${m.categoria}</td>
