@@ -665,13 +665,40 @@ function abrirNovoClienteDoModal() {
 }
 
 function renderStatusPagamentoPedido(pedidoId) {
+    const pedido = pedidos.find(p => p.id === pedidoId);
     const pagtosPedido = pagamentos.filter(p => p.pedido_id === pedidoId);
+
     if (pagtosPedido.length === 0) {
-        return '<span class="px-2 py-1 rounded text-2xs font-bold bg-slate-100 text-slate-600">Sem pagamento</span>';
+        const totalPedido = pedido ? pedido.total : 0;
+        return `
+            <div class="flex items-center justify-between gap-2">
+                <span class="px-2 py-1 rounded text-2xs font-bold bg-slate-100 text-slate-600">Sem pagamento</span>
+                ${totalPedido > 0 ? `<span class="text-2xs font-bold text-amber-600">Falta: ${fmtMoeda(totalPedido)}</span>` : ''}
+            </div>
+        `;
     }
 
-    const statusTotal = pagtosPedido[0].status;
- 
+    // Soma tudo que já foi efetivamente pago (todas as parcelas pagas de todos os pagamentos do pedido)
+    let totalPago = 0;
+    let totalRegistrado = 0;
+    pagtosPedido.forEach(pgto => {
+        totalRegistrado += pgto.valor_total;
+        const parcPagto = parcelas.filter(pc => pc.pagamento_id === pgto.id);
+        totalPago += parcPagto
+            .filter(pc => pc.data_pagamento)
+            .reduce((acc, pc) => acc + pc.valor, 0);
+    });
+
+    // Falta pagar é sempre relativo ao total do pedido (não só ao valor registrado em pagamentos)
+    const totalPedido = pedido ? pedido.total : totalRegistrado;
+    const faltaPagar = Math.max(0, totalPedido - totalPago);
+
+    // Status "consolidado": se ainda falta algo, não é Completo mesmo que o status salvo diga isso
+    let statusTotal = pagtosPedido[0].status;
+    if (faltaPagar > 0.009 && statusTotal === 'Completo') {
+        statusTotal = 'Parcial';
+    }
+
     const statusColor = {
         'Completo': 'bg-emerald-100 text-emerald-700',
         'Parcial': 'bg-amber-100 text-amber-700',
@@ -679,5 +706,13 @@ function renderStatusPagamentoPedido(pedidoId) {
         'Atrasado': 'bg-red-100 text-red-700'
     };
 
-    return `<span class="px-2 py-1 rounded text-2xs font-bold ${statusColor[statusTotal] || ''}">${statusTotal} | </span>`;
+    return `
+        <div class="flex items-center justify-between gap-2">
+            <span class="px-2 py-1 rounded text-2xs font-bold ${statusColor[statusTotal] || ''}">${statusTotal}</span>
+            ${faltaPagar > 0.009
+                ? `<span class="text-2xs font-bold text-amber-600">Falta: ${fmtMoeda(faltaPagar)}</span>`
+                : `<span class="text-2xs font-bold text-emerald-600">Pago ✓</span>`
+            }
+        </div>
+    `;
 }
